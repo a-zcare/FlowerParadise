@@ -5,3 +5,4 @@ dist/
 !.env.example
 qa/
 mobile-qa.html
+pages-release/

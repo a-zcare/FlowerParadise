@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /FlowerParadise/
+Sitemap: https://a-zcare.github.io/FlowerParadise/sitemap.xml

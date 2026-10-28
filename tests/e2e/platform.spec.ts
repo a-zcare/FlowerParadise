@@ -51,7 +51,10 @@ test("product variants, demo checkout, order history and reorder", async ({
   await page
     .getByRole("textbox", { name: "Your personal message", exact: true })
     .fill("Demo greeting");
-  await page.getByRole("button", { name: "Add to bag", exact: true }).click();
+  await page
+    .locator(".detail-copy")
+    .getByRole("button", { name: "Add to bag", exact: true })
+    .click();
   await route(page, "/cart");
   await expect(page.locator(".cart-line")).toHaveCount(1);
   await page.getByRole("textbox", { name: "Promo code" }).fill("BADCODE");
@@ -407,7 +410,8 @@ test("production PWA can reload a catalog route offline", async ({
 }) => {
   await route(page, "/shop");
   await page.waitForFunction(
-    () => navigator.serviceWorker?.controller !== null,
+    () => !!navigator.serviceWorker?.controller,
+    undefined,
     { timeout: 30000 },
   );
   await context.setOffline(true);

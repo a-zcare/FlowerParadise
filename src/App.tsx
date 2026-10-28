@@ -310,7 +310,6 @@ function Home() {
           <b>24/7</b>
         </div>
         <div className="hero-count">
-          01 <span>—</span> 03{" "}
           <small>
             {t(
               "ZIEDI. SAJŪTAS. VIENMĒR.",

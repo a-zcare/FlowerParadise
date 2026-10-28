@@ -19,6 +19,9 @@ const core = [
   "favicon.svg",
   "icons/icon-192.png",
   "icons/icon-512.png",
+  ...(await readdir(join(dir, "fonts")))
+    .filter((f) => /\.woff2?$/.test(f))
+    .map((f) => "fonts/" + f),
   ...assets.map((a) => "assets/" + a),
 ].map((a) => base + a);
 const source = await readFile("public/sw.js", "utf8");

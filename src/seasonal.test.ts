@@ -11,6 +11,7 @@ import {
 } from "./seasonal-state";
 import {
   initialState,
+  reconcile,
   migrate,
   reserveFuture,
   availability,
@@ -179,6 +180,40 @@ describe("Theme registry", () => {
     });
 });
 describe("Safe seasonal settings", () => {
+  it("preserves changed seasonal choices through reconciliation, stock updates and storage migration", () => {
+    const old = initialState(now);
+    const changed = {
+      ...old,
+      seasonal: {
+        ...old.seasonal,
+        interests: ["xm-101"],
+        launchInterest: true,
+        adventOpened: [6],
+        campaign: {
+          ...old.seasonal.campaign,
+          enabled: false,
+          sections: [1, 0, 2, 3, 4, 5, 6, 7, 8],
+        },
+        notifications: {
+          ...old.seasonal.notifications,
+          marketing: true,
+          channel: "Telegram",
+          log: [
+            {
+              id: "preview-1",
+              kind: "offer" as const,
+              channel: "Telegram",
+              date: "2026-10-28T12:00:00Z",
+            },
+          ],
+        },
+      },
+    };
+    const next = reconcile(changed, old, now);
+    expect(next.seasonal).toEqual(changed.seasonal);
+    expect(migrate(next, now).seasonal).toEqual(changed.seasonal);
+  });
+
   it("starts with only the Christmas 2026 / New Year 2027 campaign", () => {
     const d = seasonalDefaults();
     expect(d.campaign.start).toBe("2026-10-01");
@@ -210,7 +245,7 @@ describe("Safe seasonal settings", () => {
     const s = migrateSeasonal({
       adventOpened: [0, 1, 1, 25, "2"],
       notifications: { channel: "Unknown", log: [{ kind: "evil" }] },
-      campaign: { sections: [0, 0, 8, 10], featured: ["fp-1", "bad"] },
+      campaign: { sections: [0, 0, 9, 10], featured: ["fp-1", "bad"] },
     });
     expect(s.adventOpened).toEqual([1]);
     expect(s.notifications.channel).toBe("Email");

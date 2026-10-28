@@ -177,7 +177,7 @@ export function migrateSeasonal(raw: unknown): SeasonalState {
       sections: Array.isArray(c.sections)
         ? [
             ...new Set(
-              c.sections.filter((n) => Number.isInteger(n) && n >= 0 && n < 8),
+              c.sections.filter((n) => Number.isInteger(n) && n >= 0 && n < 9),
             ),
           ]
         : d.campaign.sections,

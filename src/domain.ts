@@ -743,7 +743,7 @@ export function reconcile(
   return {
     ...next,
     schemaVersion: 2,
-    seasonal: seasonalDefaults(),
+    seasonal: next.seasonal,
     batches,
     catalog,
     reservations,

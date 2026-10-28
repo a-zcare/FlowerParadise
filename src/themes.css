@@ -1,4 +1,4 @@
-html {
+html[data-visual-theme] {
   background: var(--paper);
   color: var(--ink);
 }
@@ -226,7 +226,7 @@ html[data-theme-tone="dark"] .btn.ivory {
 }
 .theme-compare-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
 }
 .theme-compare-grid > section {
@@ -415,4 +415,36 @@ html[data-theme-tone="dark"] .btn.ivory {
 dialog:has(.theme-compare-grid) {
   max-width: 1200px;
   width: 94vw;
+}
+
+@media (max-width: 650px) {
+  header .header-actions > .icon-btn:has(.lucide-moon),
+  header .header-actions > .icon-btn:has(.lucide-sun),
+  header .header-actions > a:has(.lucide-user-round) {
+    display: none;
+  }
+  header .brand > span {
+    font-size: 16px;
+  }
+  header .header-actions {
+    gap: 1px;
+    flex-shrink: 0;
+  }
+  header .theme-switcher {
+    width: 30px;
+    min-width: 28px;
+  }
+}
+@media (max-width: 380px) {
+  header .brand > span {
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  header .brand small {
+    font-size: 4px;
+    letter-spacing: 0.8px;
+  }
+  header .brand svg {
+    width: 22px;
+  }
 }

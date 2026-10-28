@@ -98,6 +98,9 @@ export default function App() {
               {label}
             </NavLink>
           ))}
+          <NavLink className="mobile-only" to="/account">
+            {t("Mans profils", "Мой кабинет", "My dashboard")}
+          </NavLink>
           <NavLink className="mobile-only" to="/advent">
             Advent
           </NavLink>

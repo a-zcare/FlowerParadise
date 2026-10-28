@@ -1,3 +1,4 @@
+import { seasonalDefaults, migrateSeasonal } from "./seasonal-state";
 import { pick, products, type Lang, type Product, type Text } from "./data";
 import { addDays, dateKey } from "./date-utils";
 import type {
@@ -53,7 +54,8 @@ export function freshness(
   if (batch.status === "discarded" || batch.status === "remove")
     return batch.status;
   const p = products.find((p) => p.id === batch.productId);
-  if (p && p.category >= 7) return "fresh";
+  if (p && (p.seasonal ? !p.seasonal.perishable : p.category >= 7))
+    return "fresh";
   const age = Math.max(
     0,
     Math.floor((Date.parse(now) - Date.parse(batch.assemblyDate)) / 86400000),
@@ -95,9 +97,9 @@ export function availability(
         (b) => b.id === c.batchId && sellable(b, s.freshnessRules, now),
       ),
   );
-  const allocated = s.reservations.filter(
-    (r) => r.product === productId && r.status === "reserved" && true,
-  ).length;
+  const allocated = s.reservations
+    .filter((r) => r.product === productId && r.status === "reserved")
+    .reduce((n, r) => n + (r.quantity ?? 1), 0);
   return {
     quantity: Math.max(0, studio - allocated) + slots.length,
     studio: Math.max(0, studio - allocated),
@@ -297,6 +299,7 @@ export function initialState(now = dateKey()): DemoState {
   });
   return {
     schemaVersion: 2,
+    seasonal: seasonalDefaults(),
     lang: "lv",
     dark: false,
     cart: [],
@@ -415,6 +418,7 @@ const array = <T>(
 export function migrate(raw: unknown, now = dateKey()): DemoState {
   const base = initialState(now);
   if (!obj(raw)) return base;
+  base.seasonal = migrateSeasonal(raw.seasonal);
   if (["lv", "ru", "en"].includes(String(raw.lang)))
     base.lang = raw.lang as Lang;
   base.dark = raw.dark === true;
@@ -478,7 +482,9 @@ export function migrate(raw: unknown, now = dateKey()): DemoState {
       ["reserved", "collected", "cancelled", "expired"].includes(
         String(x.status),
       ) &&
-      str(x.method),
+      str(x.method) &&
+      (x.quantity === undefined ||
+        (finite(x.quantity, 1, 20) && Number.isInteger(x.quantity))),
   );
   if (!base.reservations.some((r) => r.product === "slot-3"))
     base.reservations.push(initialState(now).reservations[0]);
@@ -489,7 +495,7 @@ export function migrate(raw: unknown, now = dateKey()): DemoState {
       str(x.name) &&
       date(x.date) &&
       finite(x.days, 0, 365) &&
-      finite(Number(x.event), 0, 6) &&
+      finite(Number(x.event), 0, 8) &&
       str(x.channel) &&
       typeof x.annual === "boolean",
   );
@@ -537,7 +543,17 @@ export function migrate(raw: unknown, now = dateKey()): DemoState {
         str(x.location) &&
         Object.hasOwn(statusLabels, String(x.status)),
     );
-    if (batches.length) base.batches = batches;
+    if (Array.isArray(raw.batches)) {
+      const previousIds = new Set(
+        Array.isArray(raw.catalog)
+          ? raw.catalog.filter(obj).map((p) => p.id)
+          : products.map((p) => p.id),
+      );
+      base.batches = [
+        ...batches,
+        ...base.batches.filter((b) => !previousIds.has(b.productId)),
+      ];
+    }
     const slots = array<DemoState["compartments"][number]>(
       raw.compartments,
       (x) =>
@@ -727,6 +743,7 @@ export function reconcile(
   return {
     ...next,
     schemaVersion: 2,
+    seasonal: seasonalDefaults(),
     batches,
     catalog,
     reservations,
@@ -856,6 +873,8 @@ export function reserveFuture(
     time: string;
     method: string;
     message: string;
+    quantity?: number;
+    wrapping?: string;
   },
   now = dateKey(),
 ):
@@ -863,6 +882,12 @@ export function reserveFuture(
   | { state: DemoState; code: string } {
   if (
     input.date <= now ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(input.date) ||
+    !Number.isFinite(Date.parse(input.date)) ||
+    !["vending", "pickup", "delivery"].includes(input.method) ||
+    !Number.isInteger(input.quantity ?? 1) ||
+    (input.quantity ?? 1) < 1 ||
+    (input.quantity ?? 1) > 20 ||
     !["09:00", "12:00", "15:00", "18:00", "21:00"].includes(input.time)
   )
     return { error: "date" };
@@ -876,7 +901,7 @@ export function reserveFuture(
     )
   )
     return { error: "conflict" };
-  if (!availability(s, input.product, now).studio)
+  if (availability(s, input.product, now).studio < (input.quantity ?? 1))
     return { error: "unavailable" };
   const pin = code(s.reservations.map((r) => r.code));
   return {

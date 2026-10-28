@@ -37,22 +37,38 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
-  deploy:
+  publish:
     if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Select Actions publication
+      - uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: artifact
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+      - name: Publish tested files to the permitted Pages branch
+        run: |
+          mkdir dist
+          tar -xf artifact/artifact.tar -C dist
+          cd site
+          git rm -r --ignore-unmatch .
+          cp -a ../dist/. .
+          touch .nojekyll
+          git add -A
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if ! git diff --cached --quiet; then
+            git commit -m "deploy: verified platform ${{ github.sha }}"
+            git push origin gh-pages
+          fi
+      - name: Request the native Pages build
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh api --method PUT repos/${{ github.repository }}/pages -f build_type=workflow
-      - uses: actions/configure-pages@v5
-      - name: Deploy Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        run: gh api --method POST repos/${{ github.repository }}/pages/builds

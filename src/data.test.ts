@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   categories,
+  flowerProducts,
   conflict,
   discounted,
   estimate,
@@ -11,8 +12,9 @@ import {
 } from "./data";
 describe("catalog integrity", () => {
   it("has 36 unique products and images across all collections", () => {
-    expect(products).toHaveLength(36);
-    expect(new Set(products.map((p) => p.id)).size).toBe(36);
+    expect(flowerProducts).toHaveLength(36);
+    expect(products).toHaveLength(148);
+    expect(new Set(products.map((p) => p.id)).size).toBe(148);
     expect(new Set(photos).size).toBe(36);
     expect(new Set(products.map((p) => p.category)).size).toBe(
       categories.length,

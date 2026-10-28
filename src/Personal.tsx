@@ -335,7 +335,7 @@ function AnnualPlanner() {
                 }
               >
                 {s.catalog
-                  .filter((p) => p.category < 9)
+                  .filter((p) => p.category < 9 || !!p.seasonal)
                   .map((p) => (
                     <option key={p.id} value={p.id}>
                       {pick(p.name, s.lang)} · {money(p.price, s.lang)}
@@ -768,7 +768,7 @@ function SecretGiftPage() {
                 onChange={(e) => setProduct(e.target.value)}
               >
                 {s.catalog
-                  .filter((p) => p.category < 9)
+                  .filter((p) => p.category < 9 || !!p.seasonal)
                   .map((p) => (
                     <option key={p.id} value={p.id}>
                       {pick(p.name, s.lang)} · {money(p.price, s.lang)}

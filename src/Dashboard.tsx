@@ -1,3 +1,4 @@
+import { SeasonalAdmin, NotificationCenter } from "./Seasonal";
 import {
   ArrowUpRight,
   BarChart3,
@@ -43,6 +44,8 @@ const eventNames: Text[] = [
   ["Mātes diena", "День матери", "Mother’s Day"],
   ["Sieviešu diena", "Международный женский день", "International Women’s Day"],
   ["Cits notikums", "Другое событие", "Custom event"],
+  ["Ziemassvētki", "Рождество", "Christmas"],
+  ["Jaunais gads", "Новый год", "New Year"],
 ];
 const frequencies: Record<string, Text> = {
   weekly: ["Katru nedēļu", "Еженедельно", "Weekly"],
@@ -421,6 +424,11 @@ function Account() {
       ? "wishlist"
       : params.get("tab") || "overview";
   const tabs = [
+    [
+      "christmas",
+      t("Ziemassvētku studija", "Рождественская студия", "Christmas studio"),
+    ],
+    ["notifications", t("Paziņojumi", "Уведомления", "Notifications")],
     ["overview", t("Pārskats", "Обзор", "Overview")],
     ["wishlist", t("Vēlmju saraksts", "Избранное", "Wishlist")],
     ["orders", t("Pasūtījumi", "Заказы", "Orders")],
@@ -920,6 +928,11 @@ function Admin() {
   const [discount, setDiscount] = useState(10);
   const [notice, setNotice] = useState(false);
   const tabs = [
+    [
+      "christmas",
+      t("Ziemassvētku studija", "Рождественская студия", "Christmas studio"),
+    ],
+    ["notifications", t("Paziņojumi", "Уведомления", "Notifications")],
     ["overview", t("Pārskats", "Обзор", "Overview")],
     ["products", t("Produkti", "Товары", "Products")],
     [
@@ -1000,7 +1013,11 @@ function Admin() {
           )}
         />
         <Demo />
-        {tab === "overview" || tab === "analytics" ? (
+        {tab === "christmas" ? (
+          <SeasonalAdmin />
+        ) : tab === "notifications" ? (
+          <NotificationCenter />
+        ) : tab === "overview" || tab === "analytics" ? (
           <>
             <div className="stats-grid">
               {[

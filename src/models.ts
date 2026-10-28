@@ -1,3 +1,4 @@
+import type { SeasonalState } from "./seasonal-state";
 import type { Lang, Product } from "./data";
 export interface ProductOptions {
   size: "S" | "M" | "L";
@@ -16,6 +17,8 @@ export interface CartItem {
   options?: ProductOptions;
 }
 export interface Reservation {
+  quantity?: number;
+  wrapping?:string;
   id: string;
   product: string;
   date: string;
@@ -174,6 +177,7 @@ export interface Costs {
 }
 export interface DemoState {
   schemaVersion: 2;
+  seasonal: SeasonalState;
   lang: Lang;
   dark: boolean;
   cart: CartItem[];

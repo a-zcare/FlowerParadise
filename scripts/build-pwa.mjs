@@ -19,6 +19,8 @@ const core = [
   "favicon.svg",
   "icons/icon-192.png",
   "icons/icon-512.png",
+  "seasonal/christmas-hero.webp",
+  "seasonal/christmas-hero-small.webp",
   ...(await readdir(join(dir, "fonts")))
     .filter((f) => /\.woff2?$/.test(f))
     .map((f) => "fonts/" + f),

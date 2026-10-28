@@ -1,3 +1,6 @@
+import { HolidayPersonalization } from "./SeasonalCommerce";
+import { filterCatalog } from "./catalog";
+import { InterestButton } from "./Seasonal";
 import {
   ArrowUpRight,
   Check,
@@ -9,7 +12,7 @@ import {
   SlidersHorizontal,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Link,
   useLocation,
@@ -53,11 +56,19 @@ function Catalog() {
   const { s } = useStore();
   const t = useT();
   const [params, setParams] = useSearchParams();
+  const holiday = useLocation().pathname === "/christmas";
+  const scope =
+    params.get("scope") === "all" ? "all" : holiday ? "holiday" : "flowers";
+  const [visible, setVisible] = useState(36);
+
   const [q, query] = useState("");
   const [sort, sorting] = useState("featured");
   const [color, setColor] = useState("");
   const [filters, setFilters] = useState(false);
   const [quick, setQuick] = useState<Product | null>(null);
+  useEffect(() => {
+    setVisible(36);
+  }, [params, q, sort, color]);
   const cat = params.get("category") || "";
   const occasion = params.get("occasion") || "";
   const available = params.get("availability") || "";
@@ -68,21 +79,31 @@ function Catalog() {
     else next.delete(key);
     setParams(next);
   };
-  const items = s.catalog
+  const items = filterCatalog(
+    s.catalog,
+    {
+      scope,
+      query: q,
+      category: cat,
+      occasion,
+      color,
+      max,
+      recipient: params.get("recipient") || "",
+      material: params.get("material") || "",
+      personalizable: params.get("personalizable") === "1",
+      handmade: params.get("handmade") === "1",
+      size: params.get("size") || "",
+      giftReady: params.get("giftReady") === "1",
+      method: params.get("method") || "",
+    },
+    s.lang,
+  )
     .filter(
       (p) =>
-        (!q ||
-          `${pick(p.name, s.lang)} ${pick(p.composition, s.lang)} ${pick(categories[p.category], s.lang)}`
-            .toLowerCase()
-            .includes(q.toLowerCase())) &&
-        (cat === "" || p.category === Number(cat)) &&
-        p.price <= max &&
-        (occasion === "" || p.occasion === Number(occasion)) &&
-        (color === "" || p.color === Number(color)) &&
-        (!available ||
-          (available === "now"
-            ? availability(s, p.id).immediate
-            : availability(s, p.id).quantity > 0)),
+        !available ||
+        (available === "now"
+          ? availability(s, p.id).immediate
+          : availability(s, p.id).quantity > 0),
     )
     .sort((a, b) =>
       sort === "low"
@@ -90,8 +111,10 @@ function Catalog() {
         : sort === "high"
           ? b.price - a.price
           : sort === "name"
-            ? pick(a.name, s.lang).localeCompare(pick(b.name, s.lang))
-            : 0,
+            ? pick(a.name, s.lang).localeCompare(pick(b.name, s.lang), s.lang)
+            : sort === "newest"
+              ? b.id.localeCompare(a.id)
+              : 0,
     );
   return (
     <div className="page">
@@ -101,11 +124,19 @@ function Catalog() {
           "ВЫБРАНО С ДУШОЙ",
           "GATHERED WITH FEELING",
         )}
-        title={t(
-          "Ziedi katram stāstam.",
-          "Цветы для каждой истории.",
-          "Flowers for every story.",
-        )}
+        title={
+          holiday
+            ? t(
+                "Svētki sākas ar sajūtu.",
+                "Праздник начинается с чувства.",
+                "Christmas starts with a feeling.",
+              )
+            : t(
+                "Ziedi katram stāstam.",
+                "Цветы для каждой истории.",
+                "Flowers for every story.",
+              )
+        }
         description={t(
           "No maza prieka līdz neaizmirstamam žestam. Atrodi savējo.",
           "От маленькой радости до незабываемого жеста. Найдите свой букет.",
@@ -160,6 +191,7 @@ function Catalog() {
           <option value="high">
             {t("Cena: dilstoši", "Цена: по убыванию", "Price: high to low")}
           </option>
+          <option value="newest">{t("Jaunākie", "Новинки", "Newest")}</option>
           <option value="name">{t("Nosaukums", "Название", "Name")}</option>
         </select>
       </div>
@@ -193,6 +225,97 @@ function Catalog() {
           <Link className="text-link" to="/match">
             Flower Match <ArrowUpRight size={15} />
           </Link>
+          {holiday && (
+            <div className="seasonal-filter-fields">
+              <label>
+                {t("Saņēmējs", "Получатель", "Recipient")}
+                <select
+                  value={params.get("recipient") || ""}
+                  onChange={(e) => update("recipient", e.target.value)}
+                >
+                  <option value="">{t("Visi", "Все", "All")}</option>
+                  {[
+                    ["her", t("Viņai", "Для неё", "For her")],
+                    ["him", t("Viņam", "Для него", "For him")],
+                    ["children", t("Bērniem", "Для детей", "Children")],
+                    ["parents", t("Vecākiem", "Родителям", "Parents")],
+                    ["couples", t("Pāriem", "Парам", "Couples")],
+                    ["colleagues", t("Kolēģiem", "Коллегам", "Colleagues")],
+                    ["teachers", t("Skolotājiem", "Учителям", "Teachers")],
+                    ["corporate", t("Uzņēmumiem", "Для бизнеса", "Corporate")],
+                  ].map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {t("Materiāls", "Материал", "Material")}
+                <select
+                  value={params.get("material") || ""}
+                  onChange={(e) => update("material", e.target.value)}
+                >
+                  <option value="">{t("Visi", "Все", "All")}</option>
+                  {[
+                    ["wood", t("Koks", "Дерево", "Wood")],
+                    ["glass", t("Stikls", "Стекло", "Glass")],
+                    ["greenery", t("Skujas", "Хвоя", "Greenery")],
+                    ["textile", t("Tekstils", "Текстиль", "Textile")],
+                    ["wax", t("Vasks", "Воск", "Wax")],
+                    ["food", t("Gardumi", "Угощения", "Treats")],
+                  ].map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {t("Izmērs", "Размер", "Size")}
+                <select
+                  value={params.get("size") || ""}
+                  onChange={(e) => update("size", e.target.value)}
+                >
+                  <option value="">{t("Visi", "Все", "All")}</option>
+                  <option value="mini">Mini</option>
+                  <option value="standard">
+                    {t("Standarta", "Стандартный", "Standard")}
+                  </option>
+                  <option value="large">
+                    {t("Liels", "Большой", "Large")}
+                  </option>
+                </select>
+              </label>
+              {[
+                [
+                  "personalizable",
+                  t("Personalizējams", "Персонализация", "Personalizable"),
+                ],
+                [
+                  "handmade",
+                  t(
+                    "Amatniecības stilā",
+                    "В ремесленном стиле",
+                    "Handmade-style",
+                  ),
+                ],
+                [
+                  "giftReady",
+                  t("Gatavs dāvināšanai", "Готов к подарку", "Gift-ready"),
+                ],
+              ].map(([key, label]) => (
+                <label className="check" key={key}>
+                  <input
+                    type="checkbox"
+                    checked={params.get(key) === "1"}
+                    onChange={(e) => update(key, e.target.checked ? "1" : "")}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          )}
           <h4>{t("Kolekcijas", "Коллекции", "Collections")}</h4>
           <button
             className={!cat ? "chosen" : ""}
@@ -204,16 +327,21 @@ function Catalog() {
               "All flowers & gifts",
             )}
           </button>
-          {categories.map((c, i) => (
-            <button
-              className={cat === String(i) ? "chosen" : ""}
-              key={i}
-              onClick={() => update("category", String(i))}
-            >
-              {pick(c, s.lang)}
-              <span>{s.catalog.filter((p) => p.category === i).length}</span>
-            </button>
-          ))}
+          {categories.map(
+            (c, i) =>
+              (scope === "all" || (holiday ? i >= 12 : i < 12)) && (
+                <button
+                  className={cat === String(i) ? "chosen" : ""}
+                  key={i}
+                  onClick={() => update("category", String(i))}
+                >
+                  {pick(c, s.lang)}
+                  <span>
+                    {s.catalog.filter((p) => p.category === i).length}
+                  </span>
+                </button>
+              ),
+          )}
           <h4>
             {t("Cena līdz", "Цена до", "Price up to")} {money(max, s.lang)}
           </h4>
@@ -263,6 +391,7 @@ function Catalog() {
             className="text-link"
             onClick={() => {
               setParams({});
+              setVisible(36);
               setColor("");
               query("");
             }}
@@ -283,7 +412,7 @@ function Catalog() {
         <div className="catalog-products">
           {items.length ? (
             <div className="product-grid three">
-              {items.map((p) => (
+              {items.slice(0, visible).map((p) => (
                 <ProductCard key={p.id} p={p} onQuick={setQuick} />
               ))}
             </div>
@@ -295,6 +424,15 @@ function Catalog() {
                 "No flowers match these filters",
               )}
             />
+          )}
+          {items.length > visible && (
+            <button
+              className="btn outline load-more"
+              onClick={() => setVisible((v) => v + 36)}
+            >
+              {t("Rādīt vēl", "Показать ещё", "Show more")} (
+              {items.length - visible})
+            </button>
           )}
         </div>
       </div>
@@ -378,6 +516,7 @@ function ProductContent({
     extraGift: false,
     method,
   };
+  const [personalization, setPersonalization] = useState("");
   const price = variantPrice(p, options);
   return (
     <div className={`product-detail ${compact ? "compact" : ""}`}>
@@ -436,6 +575,19 @@ function ProductContent({
         </div>
         <p>{pick(p.description, s.lang)}</p>
         <AvailabilityBadge p={p} />
+        {p.seasonal && (
+          <>
+            <span className="concept-caption">
+              {t(
+                "Koncepta vizualizācija · Ne fizisks krājums",
+                "Визуализация концепта · Не физический запас",
+                "Concept visualization · Not physical stock",
+              )}
+            </span>
+            <p className="product-safety">{pick(p.seasonal.safety, s.lang)}</p>
+            <InterestButton product={p} />
+          </>
+        )}
         <dl>
           <div>
             <dt>{t("Sastāvs", "Состав", "Composition")}</dt>
@@ -469,9 +621,15 @@ function ProductContent({
                 setSize(e.target.value as ProductOptions["size"])
               }
             >
-              <option>S</option>
-              <option>M</option>
-              <option>L</option>
+              {p.seasonal ? (
+                <option value="M">{p.size}</option>
+              ) : (
+                <>
+                  <option>S</option>
+                  <option>M</option>
+                  <option>L</option>
+                </>
+              )}
             </select>
           </label>
           <label>
@@ -531,6 +689,9 @@ function ProductContent({
             </select>
           </label>
         </div>{" "}
+        {p.seasonal && (
+          <HolidayPersonalization p={p} onChange={setPersonalization} />
+        )}
         <label className="check-label">
           <input
             type="checkbox"
@@ -573,7 +734,15 @@ function ProductContent({
             className="btn"
             disabled={availability(s, p.id).quantity < 1}
             onClick={() => {
-              if (add(p.id, qty, msg, undefined, options))
+              if (
+                add(
+                  p.id,
+                  qty,
+                  [msg, personalization].filter(Boolean).join(" · "),
+                  undefined,
+                  options,
+                )
+              )
                 toast(
                   t(
                     "Pušķis pievienots grozam",

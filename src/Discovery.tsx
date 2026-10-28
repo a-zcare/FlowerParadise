@@ -756,6 +756,7 @@ function Comparison() {
                   </dd>
                 </div>
               </dl>
+              {p.seasonal&&<dl><div><dt>{t("Personalizācija", "Персонализация", "Personalization")}</dt><dd>{p.seasonal.personalization?t("Jā", "Да", "Yes"):t("Dāvanu lente", "Подарочная лента", "Gift ribbon")}</dd></div><div><dt>{t("Iesaiņojums", "Упаковка", "Wrapping")}</dt><dd>{t("Iekļauts demo", "Включён в демо", "Included in demo")}</dd></div></dl>}
               <p className="muted">{pick(p.care, s.lang)}</p>
               <Link className="text-link" to={`/passport/${p.id}`}>
                 {t(

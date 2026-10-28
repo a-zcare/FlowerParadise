@@ -21,6 +21,8 @@ import { motion } from "motion/react";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { img } from "./data";
+import Seasonal, { SeasonalHome, campaignActive } from "./Seasonal";
+import ThemeGallery, { ThemeSwitcher } from "./Themes";
 import HomeExtras from "./HomeExtras";
 import { MobileNavigation, PageContext, PWAControls } from "./Shell";
 import { useStore } from "./store";
@@ -30,6 +32,7 @@ const Experiences = lazy(() => import("./Experiences"));
 const Dashboard = lazy(() => import("./Dashboard"));
 const Discovery = lazy(() => import("./Discovery"));
 const Personal = lazy(() => import("./Personal"));
+const ChristmasGiftBuilder = lazy(() => import("./SeasonalCommerce"));
 const Info = lazy(() => import("./Info"));
 export default function App() {
   const { s, set } = useStore();
@@ -40,10 +43,12 @@ export default function App() {
     window.scrollTo(0, 0);
     setMenu(false);
   }, [location.pathname]);
+  const christmas = campaignActive(s.seasonal.campaign);
   const nav = [
+    ["/christmas", t("Ziemassvētki", "Рождество", "Christmas")],
     ["/shop", t("Ziedi un dāvanas", "Цветы и подарки", "Flowers & gifts")],
     ["/vending", t("Ziedi 24/7", "Цветы 24/7", "Flowers 24/7")],
-    ["/subscriptions", t("Abonementi", "Подписки", "Subscriptions")],
+
     ["/discover", t("Atklāj", "Откройте", "Discover")],
   ];
   return (
@@ -63,11 +68,17 @@ export default function App() {
           <MapPin size={12} /> Daugavpils, Latvia
         </span>
         <span>
-          {t(
-            "Skaisti mirkļi negaida. Ziedi — jebkurā laikā.",
-            "Красивые моменты не ждут. Цветы — в любое время.",
-            "Beautiful moments don’t wait. Flowers, around the clock.",
-          )}
+          {christmas
+            ? t(
+                "Ziemassvētki 2026 · Jaunais gads 2027 · Drīzumā",
+                "Рождество 2026 · Новый год 2027 · Скоро",
+                "Christmas 2026 · New Year 2027 · Coming soon",
+              )
+            : t(
+                "Skaisti mirkļi negaida. Ziedi — jebkurā laikā.",
+                "Красивые моменты не ждут. Цветы — в любое время.",
+                "Beautiful moments don’t wait. Flowers, around the clock.",
+              )}
         </span>
         <Link to="/vending">
           {t("Iepazīsti 24/7", "Узнать о 24/7", "Discover 24/7")}{" "}
@@ -87,6 +98,15 @@ export default function App() {
               {label}
             </NavLink>
           ))}
+          <NavLink className="mobile-only" to="/advent">
+            Advent
+          </NavLink>
+          <NavLink className="mobile-only" to="/notifications">
+            {t("Paziņojumi", "Уведомления", "Notifications")}
+          </NavLink>
+          <NavLink className="mobile-only" to="/themes">
+            {t("Dizainu galerija", "Галерея тем", "Theme Gallery")}
+          </NavLink>
           <NavLink className="mobile-only" to="/reminders">
             {t("Svarīgi datumi", "Важные даты", "Important dates")}
           </NavLink>
@@ -104,6 +124,7 @@ export default function App() {
           </NavLink>
         </nav>
         <div className="header-actions">
+          <ThemeSwitcher />
           <select
             aria-label={t("Valoda", "Язык", "Language")}
             value={s.lang}
@@ -174,7 +195,16 @@ export default function App() {
           }
         >
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/themes" element={<ThemeGallery />} />
+            <Route path="/" element={<SeasonalHome original={<Home />} />} />
+            <Route path="/christmas" element={<Shop />} />
+            <Route
+              path="/christmas-builder"
+              element={<ChristmasGiftBuilder />}
+            />
+            {["/advent", "/launch", "/notifications"].map((path) => (
+              <Route key={path} path={path} element={<Seasonal />} />
+            ))}
             <Route path="/shop" element={<Shop />} />
             {[
               "/discover",
@@ -226,6 +256,25 @@ export default function App() {
           </Routes>
         </Suspense>
       </main>
+      {s.seasonal.campaign.prelaunch && (
+        <div className="prelaunch-strip">
+          <span>
+            {t(
+              "Pirms atklāšanas · Šī ir koncepta demonstrācija",
+              "До открытия · Демонстрация концепта",
+              "Pre-launch · A concept demonstration",
+            )}
+          </span>
+          <Link to="/launch">
+            {t("Izsaki interesi", "Выразить интерес", "Share your interest")}{" "}
+            <ArrowUpRight size={14} />
+          </Link>
+          <Link to="/themes">{t("Dizaini", "Темы", "Themes")}</Link>
+          <Link to="/notifications">
+            {t("Paziņojumi", "Уведомления", "Notifications")}
+          </Link>
+        </div>
+      )}
       <Footer />
       <MobileNavigation />
       <PWAControls />

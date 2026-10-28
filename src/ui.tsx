@@ -93,13 +93,31 @@ export function ProductCard({
         <Link to={`/product/${p.id}`}>
           <img
             src={img(p.photo)}
-            alt={pick(p.name, s.lang)}
+            alt={
+              p.seasonal
+                ? t(
+                    "Svētku stila iedvesmas attēls",
+                    "Изображение праздничного стиля",
+                    "Holiday style inspiration image",
+                  )
+                : pick(p.name, s.lang)
+            }
             loading="lazy"
             onError={(e) => {
-              e.currentTarget.src = img("1525310072745-f49212b5ac6d");
+              e.currentTarget.src = p.seasonal
+                ? `${import.meta.env.BASE_URL}favicon.svg`
+                : img("1525310072745-f49212b5ac6d");
+              e.currentTarget.alt = t(
+                "Attēls nav pieejams",
+                "Изображение недоступно",
+                "Image unavailable",
+              );
             }}
           />
         </Link>
+        {p.seasonal && (
+          <span className="seasonal-badge">CHRISTMAS 2026 / 2027</span>
+        )}
         {p.stock < 3 && (
           <span className="badge">
             {t("Mazā izlasē", "Малая серия", "Small batch")}
@@ -129,6 +147,15 @@ export function ProductCard({
           </button>
         )}
       </div>
+      {p.seasonal && (
+        <small className="concept-caption">
+          {t(
+            "Stila iedvesma · Demo produkts",
+            "Пример стиля · Демо-товар",
+            "Style inspiration · Demo product",
+          )}
+        </small>
+      )}
       <div className="product-meta">
         <span>{pick(categories[p.category], s.lang)}</span>
         <span>€</span>

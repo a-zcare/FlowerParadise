@@ -2,6 +2,11 @@
 <html lang="lv">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      try { const t=JSON.parse(localStorage.getItem('flower-paradise-visual-v1')||'{}');
+        if(t.tokens&&typeof t.current==='string') { const r=document.documentElement;r.dataset.visualTheme=t.current;r.dataset.themeDetail=t.detail;r.dataset.themeTone=t.tone;if(t.dark)r.dataset.theme='dark';for(const [k,v] of Object.entries(t.tokens))if(/^--[a-z-]+$/.test(k)&&typeof v==='string'&&v.length<150)r.style.setProperty(k,v); }
+      } catch {}
+    </script>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#344c3d" />
     <meta
@@ -10,7 +15,7 @@
     />
     <meta
       property="og:title"
-      content="Flower Paradise · Flowers for life's beautiful moments"
+      content="Flower Paradise · Christmas 2026 & New Year 2027"
     />
     <meta
       property="og:description"
@@ -19,7 +24,7 @@
     <meta property="og:type" content="website" />
     <meta
       property="og:image"
-      content="https://a-zcare.github.io/FlowerParadise/images/1561181286-d3fee7d55364-large.webp"
+      content="https://a-zcare.github.io/FlowerParadise/seasonal/christmas-hero.webp"
     />
     <link rel="icon" href="/FlowerParadise/favicon.svg" />
     <link rel="canonical" href="https://a-zcare.github.io/FlowerParadise/" />

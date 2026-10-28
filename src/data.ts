@@ -1,3 +1,5 @@
+import { holidayProducts, holidayCategories } from "./holiday";
+import type { SeasonalDetails } from "./holiday";
 import { addDays, dateKey } from "./date-utils";
 export type Lang = "lv" | "ru" | "en";
 export type Text = [string, string, string];
@@ -16,12 +18,18 @@ export const categories: Text[] = [
   ["Dāvanu kastes", "Подарочные наборы", "Gift boxes"],
   ["Apsveikuma kartītes", "Открытки", "Greeting cards"],
   ["Ziedu piederumi", "Аксессуары", "Flower accessories"],
+  ...holidayCategories,
 ];
 export const occasions: Text[] = [
   ["Dzimšanas diena", "День рождения", "Birthday"],
   ["Mīlestība", "Любовь", "Love"],
   ["Paldies", "Благодарность", "Thank you"],
   ["Vienkārši tāpat", "Просто так", "Just because"],
+  [
+    "Ziemassvētki un Jaunais gads",
+    "Рождество и Новый год",
+    "Christmas & New Year",
+  ],
 ];
 export const photos = [
   "1680563899402-26c3a712831f",
@@ -117,6 +125,7 @@ export interface Product {
   availabilityType: "pickup-delivery" | "preorder";
   customizable: boolean;
   flowerCount?: number;
+  seasonal?: SeasonalDetails;
 }
 const compositions: Text[] = [
   ["Rozes, eikalipts", "Розы, эвкалипт", "Roses, eucalyptus"],
@@ -160,7 +169,7 @@ const compositions: Text[] = [
   ["Papīra apsveikuma kartīte", "Бумажная открытка", "Paper greeting card"],
   ["Ziedu kopšanas piederums", "Аксессуар для цветов", "Flower care accessory"],
 ];
-export const products: Product[] = names.map((name, i) => ({
+export const flowerProducts: Product[] = names.map((name, i) => ({
   id: `fp-${i + 1}`,
   name,
   category: Math.floor(i / 3),
@@ -208,6 +217,7 @@ export const money = (v: number, lang: Lang = "lv") =>
     style: "currency",
     currency: "EUR",
   }).format(v);
+export const products: Product[] = [...flowerProducts, ...holidayProducts];
 export const colors: Text[] = [
   ["Rozā", "Розовый", "Pink"],
   ["Sarkans", "Красный", "Red"],

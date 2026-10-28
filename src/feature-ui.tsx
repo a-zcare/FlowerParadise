@@ -33,11 +33,13 @@ export function AvailabilityBadge({ p }: { p: Product }) {
   return (
     <span className={`availability-badge ${a.quantity ? "" : "unavailable"}`}>
       <i />
-      {a.immediate
-        ? t("Demo: automātā", "Демо: в автомате", "Demo: in the machine")
-        : a.quantity
-          ? t("Demo: pieejams", "Демо: доступен", "Demo: available")
-          : t("Demo: nav pieejams", "Демо: недоступен", "Demo: unavailable")}
+      {p.seasonal
+        ? t("Demo iepriekšpasūtījums", "Демо-предзаказ", "Demo preorder")
+        : a.immediate
+          ? t("Demo: automātā", "Демо: в автомате", "Demo: in the machine")
+          : a.quantity
+            ? t("Demo: pieejams", "Демо: доступен", "Demo: available")
+            : t("Demo: nav pieejams", "Демо: недоступен", "Demo: unavailable")}
     </span>
   );
 }

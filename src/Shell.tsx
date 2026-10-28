@@ -16,6 +16,16 @@ import { pick, type Text } from "./data";
 import { useStore } from "./store";
 import { useT } from "./ui";
 const labels: Record<string, Text> = {
+  "/christmas": ["Ziemassvētki 2026", "Рождество 2026", "Christmas 2026"],
+  "/christmas-builder": [
+    "Svētku dāvanu komplekts",
+    "Праздничный подарочный набор",
+    "Christmas gift builder",
+  ],
+  "/advent": ["Adventes kalendārs", "Адвент-календарь", "Advent calendar"],
+  "/launch": ["Pirms atklāšanas", "До открытия", "Before we open"],
+  "/themes": ["Dizainu galerija", "Галерея тем", "Theme Gallery"],
+  "/notifications": ["Paziņojumi", "Уведомления", "Notifications"],
   "/shop": ["Ziedi un dāvanas", "Цветы и подарки", "Flowers & gifts"],
   "/discover": ["Atklāj", "Откройте", "Discover"],
   "/match": ["Flower Match", "Flower Match", "Flower Match"],

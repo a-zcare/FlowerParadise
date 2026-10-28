@@ -6,7 +6,7 @@ async function english(page: Page) {
     .selectOption("en");
   await expect(
     page.getByRole("heading", {
-      name: "Some feelings deserve flowers.",
+      name: "A little wonder. Made to give.",
       exact: true,
     }),
   ).toBeVisible();
@@ -386,7 +386,7 @@ test("Latvian, Russian, English and dark theme persist through refresh", async (
     .selectOption("ru");
   await expect(
     page.getByRole("heading", {
-      name: "Цветы, которые говорят больше.",
+      name: "Немного чуда. От всего сердца.",
       exact: true,
     }),
   ).toBeVisible();
@@ -399,7 +399,7 @@ test("Latvian, Russian, English and dark theme persist through refresh", async (
     .selectOption("lv");
   await expect(
     page.getByRole("heading", {
-      name: "Ziedi, kas pasaka vairāk.",
+      name: "Mazliet brīnuma. No sirds.",
       exact: true,
     }),
   ).toBeVisible();

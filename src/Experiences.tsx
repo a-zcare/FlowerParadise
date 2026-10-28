@@ -32,12 +32,19 @@ function Reserve() {
   const { s, set } = useStore();
   const t = useT();
   const [params] = useSearchParams();
+  const holiday =
+    params.has("holiday") ||
+    s.catalog.some((p) => p.id === params.get("product") && p.seasonal);
+  const [quantity, setQuantity] = useState(1);
+  const [wrapping, setWrapping] = useState("kraft");
   const [product, setProduct] = useState(
     s.catalog.some((p) => p.id === params.get("product"))
       ? params.get("product")!
-      : s.catalog[0].id,
+      : holiday
+        ? s.catalog.find((p) => p.seasonal)!.id
+        : s.catalog[0].id,
   );
-  const [method, setMethod] = useState("vending");
+  const [method, setMethod] = useState(holiday ? "pickup" : "vending");
   const [date, setDate] = useState(future(1));
   const [time, setTime] = useState("12:00");
   const [msg, setMsg] = useState("");
@@ -108,6 +115,8 @@ function Reserve() {
               time,
               method,
               message: msg,
+              quantity,
+              wrapping,
             });
             if ("error" in result) {
               setError(
@@ -143,7 +152,9 @@ function Reserve() {
                 onChange={(e) => setProduct(e.target.value)}
               >
                 {s.catalog
-                  .filter((p) => p.category < 9)
+                  .filter((p) =>
+                    holiday ? !!p.seasonal : !p.seasonal && p.category < 9,
+                  )
                   .map((p) => (
                     <option key={p.id} value={p.id}>
                       {pick(p.name, s.lang)} · {money(p.price, s.lang)}
@@ -151,6 +162,41 @@ function Reserve() {
                   ))}
               </select>
             </label>
+            {holiday && (
+              <div className="form-grid">
+                <label>
+                  {t("Daudzums", "Количество", "Quantity")}
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={quantity}
+                    onChange={(e) =>
+                      setQuantity(
+                        Math.max(1, Math.min(20, Number(e.target.value) || 1)),
+                      )
+                    }
+                  />
+                </label>
+                <label>
+                  {t("Iesaiņojums", "Упаковка", "Gift wrapping")}
+                  <select
+                    value={wrapping}
+                    onChange={(e) => setWrapping(e.target.value)}
+                  >
+                    <option value="kraft">
+                      {t("Dabīgs krafts", "Натуральный крафт", "Natural kraft")}
+                    </option>
+                    <option value="ivory">
+                      {t("Ziloņkauls", "Слоновая кость", "Ivory")}
+                    </option>
+                    <option value="burgundy">
+                      {t("Bordo", "Бордо", "Burgundy")}
+                    </option>
+                  </select>
+                </label>
+              </div>
+            )}
             <div className="form-grid">
               <label>
                 {t("Datums", "Дата", "Date")}
@@ -177,12 +223,18 @@ function Reserve() {
                 value={method}
                 onChange={(e) => setMethod(e.target.value)}
               >
-                <option value="vending">
-                  {t(
-                    "Ziedu automāts",
-                    "Цветочный автомат",
-                    "Flower vending pickup",
-                  )}
+                <option value={holiday ? "pickup" : "vending"}>
+                  {holiday
+                    ? t(
+                        "Iepriekšpasūtījuma saņemšana",
+                        "Получение предзаказа",
+                        "Preorder pickup",
+                      )
+                    : t(
+                        "Ziedu automāts",
+                        "Цветочный автомат",
+                        "Flower vending pickup",
+                      )}
                 </option>
                 <option value="delivery">
                   {t("Piegāde · €5", "Доставка · €5", "Delivery · €5")}
@@ -217,7 +269,10 @@ function Reserve() {
             <img src={img(p.photo)} alt={pick(p.name, s.lang)} />
             <h2>{pick(p.name, s.lang)}</h2>
             <strong>
-              {money(p.price + (method === "delivery" ? 5 : 0), s.lang)}
+              {money(
+                p.price * quantity + (method === "delivery" ? 5 : 0),
+                s.lang,
+              )}
             </strong>
             <p>
               {date} · {time}

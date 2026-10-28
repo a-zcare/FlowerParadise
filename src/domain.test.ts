@@ -29,11 +29,11 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 describe("versioned demo repository", () => {
-  it("creates four compartments and 36 products", () => {
+  it("creates four compartments and the full shared catalog", () => {
     const s = initialState();
     expect(s.schemaVersion).toBe(2);
     expect(s.compartments).toHaveLength(4);
-    expect(s.catalog).toHaveLength(36);
+    expect(s.catalog).toHaveLength(148);
     expect(s.compartments.filter((c) => c.status === "available")).toHaveLength(
       3,
     );

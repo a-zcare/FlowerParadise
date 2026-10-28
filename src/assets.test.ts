@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { photos } from "./data";
+import { photos, products } from "./data";
 describe("bundled photography", () => {
   it("provides small and large WebP files for every product", () => {
-    for (const id of photos) {
+    for (const id of new Set([...photos,...products.map(p=>p.photo)])) {
       for (const suffix of ["", "-large"]) {
         const path = join(
           process.cwd(),

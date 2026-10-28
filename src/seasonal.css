@@ -757,3 +757,20 @@
     transform: translateY(-4px);
   }
 }
+.product-bottom > a {
+  min-width: 0;
+  flex: 1;
+}
+.product-bottom h3 {
+  overflow-wrap: anywhere;
+}
+.product-bottom > .icon-btn {
+  flex: 0 0 auto;
+}
+.product-meta > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.product-meta > span:last-child {
+  flex-shrink: 0;
+}

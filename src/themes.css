@@ -448,3 +448,23 @@ dialog:has(.theme-compare-grid) {
     width: 22px;
   }
 }
+@media (max-width: 650px) {
+  header .brand {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  header .brand > span {
+    white-space: normal;
+    line-height: 1.15;
+  }
+  header .brand small {
+    white-space: normal;
+  }
+}
+@media (max-width: 380px) {
+  header .brand > span {
+    font-size: 12px;
+    letter-spacing: 0;
+    max-width: 106px;
+  }
+}

@@ -18,14 +18,11 @@ All interface copy, product names and descriptions are available in Latvian, Rus
 
 Repository identity is **a-zcare/FlowerParadise**, so the case-sensitive Pages URL is **https://a-zcare.github.io/FlowerParadise/**. It is not the requested lowercase, hyphenated path. No root `a-zcare.github.io` repository is modified. `vite.config.ts` sets `/FlowerParadise/`. Hash routing (`/#/shop`, `/#/product/fp-1`) ensures direct entry and refresh work on static Pages without rewrite infrastructure. This deliberately favours reliable refreshes over server-style route paths. The sitemap contains the canonical index; search engines do not independently index hash routes.
 
-`.github/workflows/pages.yml` runs install, ESLint, TypeScript, tests and production build before uploading the Pages artifact. On main, it deploys to Pages using a restricted OIDC deployment job. Owner setup, if needed:
+`.github/workflows/pages.yml` installs dependencies, runs ESLint, TypeScript, Vitest, the production dependency audit, the production build and Playwright before packaging the Pages artifact. A restricted publication job updates only the existing `gh-pages` branch and requests GitHub’s native Pages build. This respects the environment rule that allows `gh-pages` but rejects `main`; no environment protections are changed.
 
-1. Open repository **Settings → Pages**. Set **Build and deployment → Source → GitHub Actions**.
-2. A private repository requires a plan with private-repository Pages support. If unavailable, choose an eligible plan or explicitly decide whether to make this repository public; the implementation does not change visibility.
-3. Open **Actions → Quality checks and GitHub Pages → Run workflow → main** after Pages is enabled. If an environment approval is required, approve the `github-pages` deployment.
-4. Confirm the green deployment and open its returned URL. No live deployment should be assumed until verified.
+The repository is public and Pages is configured for **Deploy from a branch → gh-pages → /(root)**. For future owner setup, preserve that branch source. Run the quality workflow on main after changes, then verify both the workflow and native Pages deployment. If an organization restricts the workflow token’s write permissions, an owner must allow publication to this branch or publish the verified artifact with an authorized connection.
 
-The connected GitHub tool does not expose repository rename or Pages settings mutations. If the owner later renames the repository to `flower-paradise`, update the Vite base, favicon path in index.html, robots, sitemap and this README to the new path before deploying.
+The repository is not renamed. If the owner later renames it to `flower-paradise`, update the Vite base, manifest, worker scope, icon paths, metadata, robots, sitemap and publication instructions together.
 
 ## Photography and references
 
@@ -47,7 +44,7 @@ The PWA precaches the application shell and route chunks, supports an offline fa
 
 Run `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, then `npx playwright install chromium` and `npm run test:e2e`. The production Playwright suite covers shopping, recommendations, comparison, vending, reservations, gifting, reminders, operations, reset, language persistence, offline loading and responsive layouts at 320, 375, 390, 430, 768, 1024, 1440 and 1920 pixels plus landscape sizes. GitHub Actions runs these checks before deploying; failed browser reports are retained as artifacts.
 
-The former branch publication was verified online before this upgrade. The current workflow uses the permitted gh-pages publication branch after validation. The case-sensitive public URL remains https://a-zcare.github.io/FlowerParadise/. No repository rename or visibility change is performed by this project.
+Release validation: 78 Vitest tests and 45 Chromium Playwright tests passed, together with ESLint, TypeScript, the production dependency audit and production build. [Quality workflow 40762651747](https://github.com/a-zcare/FlowerParadise/actions/runs/40762651747) validated source commit `fbf969ed0269dca3aaa50feb9694444ecfb13a4e`. Native [Pages deployment 40763010969](https://github.com/a-zcare/FlowerParadise/actions/runs/40763010969) published artifact commit `264fc3d34e5181be4997802df43c82d658132fb9`. The Christmas homepage was opened and visually verified at https://a-zcare.github.io/FlowerParadise/. No repository rename or visibility change was performed.
 
 ## Christmas 2026 / New Year 2027 extension
 
@@ -59,4 +56,8 @@ Holiday photography is **style inspiration**, not exact product or stock photogr
 
 ### Publication constraints
 
-The GitHub environment permits `gh-pages` and rejects `main`. The workflow therefore tests source on main, publishes the tested artifact to the permitted branch, then requests the native Pages build. No environment protection rules are weakened. The previous platform was published and verified at https://a-zcare.github.io/FlowerParadise/ (source `3266c13`, Pages `4bde9c9`). The lowercase requested path remains unavailable because the repository is named FlowerParadise; it is preserved as requested.
+The GitHub environment permits `gh-pages` and rejects `main`. The workflow therefore tests source on main, publishes the tested artifact to the permitted branch, then requests the native Pages build. No environment protection rules are weakened. The Christmas platform is published and verified at https://a-zcare.github.io/FlowerParadise/ (source `fbf969e`, Pages `264fc3d`). The lowercase requested path remains unavailable because the repository is named FlowerParadise; it is preserved as requested.
+
+## Published preview
+
+![Published Christmas homepage](docs/preview/christmas-home.jpg)

@@ -1,3 +1,14 @@
+import {
+  ArrowUpRight,
+  Check,
+  Heart,
+  Minus,
+  Plus,
+  Search,
+  ShoppingBag,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import {
   Link,
@@ -6,29 +17,31 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import {
-  ArrowUpRight,
-  SlidersHorizontal,
-  Search,
-  Minus,
-  Plus,
-  Trash2,
-  Heart,
-  Check,
-  ShoppingBag,
-} from "lucide-react";
-import { useStore, uid } from "./store";
-import { useT, Title, ProductCard, Modal, Empty, Demo, IconButton } from "./ui";
-import {
-  pick,
-  money,
-  img,
   categories,
-  occasions,
   colors,
-  discounted,
   future,
+  img,
+  money,
+  occasions,
+  pick,
   type Product,
 } from "./data";
+import {
+  availability,
+  cartTotals,
+  consumeInventory,
+  linePrice,
+  variantPrice,
+} from "./domain";
+import {
+  AvailabilityBadge,
+  CompareButton,
+  PassportSnippet,
+  PhotoPreview,
+} from "./feature-ui";
+import type { ProductOptions } from "./models";
+import { uid, useStore } from "./store";
+import { Demo, Empty, IconButton, Modal, ProductCard, Title, useT } from "./ui";
 export default function Shop() {
   const loc = useLocation();
   if (loc.pathname === "/cart") return <Cart />;
@@ -47,6 +60,7 @@ function Catalog() {
   const [quick, setQuick] = useState<Product | null>(null);
   const cat = params.get("category") || "";
   const occasion = params.get("occasion") || "";
+  const available = params.get("availability") || "";
   const max = Number(params.get("max") || 150);
   const update = (key: string, value: string) => {
     const next = new URLSearchParams(params);
@@ -64,7 +78,11 @@ function Catalog() {
         (cat === "" || p.category === Number(cat)) &&
         p.price <= max &&
         (occasion === "" || p.occasion === Number(occasion)) &&
-        (color === "" || p.color === Number(color)),
+        (color === "" || p.color === Number(color)) &&
+        (!available ||
+          (available === "now"
+            ? availability(s, p.id).immediate
+            : availability(s, p.id).quantity > 0)),
     )
     .sort((a, b) =>
       sort === "low"
@@ -147,6 +165,34 @@ function Catalog() {
       </div>
       <div className="catalog-layout">
         <aside className={filters ? "filters visible" : "filters"}>
+          <label>
+            {t("Pieejamība", "Доступность", "Availability")}
+            <select
+              value={available}
+              onChange={(e) => update("availability", e.target.value)}
+            >
+              <option value="">
+                {t(
+                  "Visi demo produkti",
+                  "Все демо-товары",
+                  "All demo products",
+                )}
+              </option>
+              <option value="stock">
+                {t("Demo krājumā", "В демо-запасе", "In demo stock")}
+              </option>
+              <option value="now">
+                {t(
+                  "Demo automātā tagad",
+                  "В демо-автомате сейчас",
+                  "In the demo machine now",
+                )}
+              </option>
+            </select>
+          </label>
+          <Link className="text-link" to="/match">
+            Flower Match <ArrowUpRight size={15} />
+          </Link>
           <h4>{t("Kolekcijas", "Коллекции", "Collections")}</h4>
           <button
             className={!cat ? "chosen" : ""}
@@ -169,7 +215,7 @@ function Catalog() {
             </button>
           ))}
           <h4>
-            {t("Cena līdz", "Цена до", "Price up to")} {money(max)}
+            {t("Cena līdz", "Цена до", "Price up to")} {money(max, s.lang)}
           </h4>
           <input
             type="range"
@@ -282,6 +328,7 @@ function ProductDetail() {
         <span>{pick(p.name, s.lang)}</span>
       </div>
       <ProductContent p={p} />
+      <PhotoPreview p={p} />
       <section className="section related">
         <h2>
           {t(
@@ -319,10 +366,37 @@ function ProductContent({
   const [photo, setPhoto] = useState(0);
   const [card, setCard] = useState(false);
   const [msg, setMsg] = useState("");
+  const [size, setSize] = useState<ProductOptions["size"]>("M");
+  const [color, setColor] = useState(p.color);
+  const [wrap, setWrap] = useState<ProductOptions["wrapping"]>("ivory");
+  const [method, setMethod] = useState<"pickup" | "delivery">("pickup");
+  const options: ProductOptions = {
+    size,
+    color,
+    wrapping: wrap,
+    card,
+    extraGift: false,
+    method,
+  };
+  const price = variantPrice(p, options);
   return (
     <div className={`product-detail ${compact ? "compact" : ""}`}>
       <div className="gallery">
-        <div className="detail-window">
+        <div
+          className="detail-window"
+          onTouchStart={(e) => {
+            e.currentTarget.dataset.startX = String(e.touches[0].clientX);
+          }}
+          onTouchEnd={(e) => {
+            if (
+              Math.abs(
+                e.changedTouches[0].clientX -
+                  Number(e.currentTarget.dataset.startX),
+              ) > 35
+            )
+              setPhoto(photo ? 0 : 1);
+          }}
+        >
           <img
             className={photo ? "detail-image zoomed" : "detail-image"}
             src={img(p.photo, 1100)}
@@ -357,16 +431,11 @@ function ProductContent({
         <span className="eyebrow">{pick(categories[p.category], s.lang)}</span>
         <h1>{pick(p.name, s.lang)}</h1>
         <div className="detail-price">
-          {money(p.price + (card ? 5 : 0))}
+          {money(price, s.lang)}
           <span>{t("Demo cena", "Демо-цена", "Demo price")}</span>
         </div>
-        <p>
-          {t(
-            "Rūpīgi izvēlēta kompozīcija sirsnīgam mirklim. Maigi toņi, dabiskas faktūras un pārdomāts noformējums. Katra kompozīcija tiek veidota individuāli.",
-            "Заботливо подобранная композиция для тёплого момента. Нежные оттенки, природные фактуры и продуманное оформление. Каждая композиция индивидуальна.",
-            "A thoughtfully composed piece for a heartfelt moment. Beautiful tones, natural textures and considered finishing touches. Each arrangement is individually composed.",
-          )}
-        </p>
+        <p>{pick(p.description, s.lang)}</p>
+        <AvailabilityBadge p={p} />
         <dl>
           <div>
             <dt>{t("Sastāvs", "Состав", "Composition")}</dt>
@@ -391,6 +460,77 @@ function ProductContent({
             </dd>
           </div>
         </dl>
+        <div className="form-grid product-options">
+          <label>
+            {t("Izmērs", "Размер", "Size option")}
+            <select
+              value={size}
+              onChange={(e) =>
+                setSize(e.target.value as ProductOptions["size"])
+              }
+            >
+              <option>S</option>
+              <option>M</option>
+              <option>L</option>
+            </select>
+          </label>
+          <label>
+            {t("Krāsas izvēle", "Выбор оттенка", "Colour option")}
+            <select
+              value={color}
+              onChange={(e) => setColor(Number(e.target.value))}
+            >
+              {colors.map((c, i) => (
+                <option key={i} value={i}>
+                  {pick(c, s.lang)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t("Iesaiņojums", "Упаковка", "Wrapping")}
+            <select
+              value={wrap}
+              onChange={(e) =>
+                setWrap(e.target.value as ProductOptions["wrapping"])
+              }
+            >
+              <option value="ivory">
+                {t(
+                  "Ziloņkaula papīrs",
+                  "Бумага цвета слоновой кости",
+                  "Ivory paper",
+                )}
+              </option>
+              <option value="kraft">
+                {t("Kraftpapīrs", "Крафт", "Natural kraft")}
+              </option>
+              <option value="rose">
+                {t("Rozā papīrs", "Розовая бумага", "Dusty rose paper")}
+              </option>
+            </select>
+          </label>
+          <label>
+            {t("Saņemšanas izvēle", "Выбор получения", "Fulfilment option")}
+            <select
+              value={method}
+              onChange={(e) =>
+                setMethod(e.target.value as "pickup" | "delivery")
+              }
+            >
+              <option value="pickup">
+                {t("Saņemšana", "Самовывоз", "Pickup")}
+              </option>
+              <option value="delivery">
+                {t(
+                  "Piegāde · €5 noformēšanā",
+                  "Доставка · €5 при оформлении",
+                  "Delivery · €5 at checkout",
+                )}
+              </option>
+            </select>
+          </label>
+        </div>{" "}
         <label className="check-label">
           <input
             type="checkbox"
@@ -431,23 +571,16 @@ function ProductContent({
           </div>
           <button
             className="btn"
+            disabled={availability(s, p.id).quantity < 1}
             onClick={() => {
-              add(
-                p.id,
-                qty,
-                msg +
-                  (card
-                    ? t(" · kartīte", " · открытка", " · greeting card")
-                    : ""),
-                p.price + (card ? 5 : 0),
-              );
-              toast(
-                t(
-                  "Pušķis pievienots grozam",
-                  "Букет добавлен в корзину",
-                  "Your bouquet is in the bag",
-                ),
-              );
+              if (add(p.id, qty, msg, undefined, options))
+                toast(
+                  t(
+                    "Pušķis pievienots grozam",
+                    "Букет добавлен в корзину",
+                    "Your bouquet is in the bag",
+                  ),
+                );
             }}
           >
             <ShoppingBag size={17} />
@@ -468,6 +601,18 @@ function ProductContent({
             <Heart size={21} />
           </IconButton>
         </div>
+        <div className="detail-feature-links">
+          <CompareButton id={p.id} />
+          <Link className="text-link" to={`/secret-gift?product=${p.id}`}>
+            {t(
+              "Pārvērst pārsteigumā",
+              "Превратить в сюрприз",
+              "Make it a surprise",
+            )}
+            <ArrowUpRight size={15} />
+          </Link>
+        </div>
+        <PassportSnippet p={p} />
         <Link className="text-link" to={`/reserve?product=${p.id}`}>
           {t(
             "Rezervēt īpašam datumam",
@@ -514,11 +659,8 @@ function Cart() {
   const t = useT();
   const [code, setCode] = useState(s.promo);
   const [error, setError] = useState("");
-  const total = s.cart.reduce(
-    (a, x) =>
-      a + (x.price ?? s.catalog.find((p) => p.id === x.id)!.price) * x.qty,
-    0,
-  );
+  const totals = cartTotals(s);
+  const total = totals.subtotal;
   return (
     <div className="page">
       <Title
@@ -556,7 +698,7 @@ function Cart() {
                     <Link to={`/product/${p.id}`}>
                       <h3>{pick(p.name, s.lang)}</h3>
                     </Link>
-                    <span>{money(x.price ?? p.price)}</span>
+                    <span>{money(linePrice(x, s.catalog), s.lang)}</span>
                     {x.note && <p className="muted">{x.note}</p>}
                     <div className="quantity">
                       <IconButton
@@ -582,7 +724,23 @@ function Cart() {
                             ...o,
                             cart: o.cart.map((a, k) =>
                               k === i
-                                ? { ...a, qty: Math.min(20, a.qty + 1) }
+                                ? {
+                                    ...a,
+                                    qty: Math.min(
+                                      20,
+                                      a.qty + 1,
+                                      Math.max(
+                                        1,
+                                        availability(o, a.id).quantity -
+                                          o.cart
+                                            .filter(
+                                              (x, n) =>
+                                                n !== k && x.id === a.id,
+                                            )
+                                            .reduce((n, x) => n + x.qty, 0),
+                                      ),
+                                    ),
+                                  }
                                 : a,
                             ),
                           }))
@@ -592,7 +750,9 @@ function Cart() {
                       </IconButton>
                     </div>
                   </div>
-                  <strong>{money((x.price ?? p.price) * x.qty)}</strong>
+                  <strong>
+                    {money(linePrice(x, s.catalog) * x.qty, s.lang)}
+                  </strong>
                   <IconButton
                     label={t("Noņemt", "Удалить", "Remove")}
                     onClick={() =>
@@ -618,12 +778,15 @@ function Cart() {
             </h2>
             <div className="summary-line">
               <span>{t("Preces", "Товары", "Subtotal")}</span>
-              <b>{money(total)}</b>
+              <b>{money(total, s.lang)}</b>
             </div>
             {s.promo && (
               <div className="summary-line">
-                <span>BLOOM10 · −10%</span>
-                <b>−{money(total - discounted(total, s.promo))}</b>
+                <span>
+                  {s.promo} · −
+                  {s.campaigns.find((c) => c.code === s.promo)?.percent ?? 0}%
+                </span>
+                <b>−{money(totals.discount, s.lang)}</b>
               </div>
             )}
             <p className="muted">
@@ -637,8 +800,12 @@ function Cart() {
               className="inline-form"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (code.trim().toUpperCase() === "BLOOM10") {
-                  set((o) => ({ ...o, promo: "BLOOM10" }));
+                if (
+                  s.campaigns.some(
+                    (c) => c.active && c.code === code.trim().toUpperCase(),
+                  )
+                ) {
+                  set((o) => ({ ...o, promo: code.trim().toUpperCase() }));
                   setError("");
                 } else {
                   setError(
@@ -666,7 +833,7 @@ function Cart() {
             </p>
             <div className="summary-total">
               <span>{t("Kopā", "Итого", "Total")}</span>
-              <b>{money(discounted(total, s.promo))}</b>
+              <b>{money(totals.total, s.lang)}</b>
             </div>
             <Link className="btn full" to="/checkout">
               {t(
@@ -685,17 +852,15 @@ function Cart() {
 function Checkout() {
   const { s, set } = useStore();
   const t = useT();
-  const [method, setMethod] = useState("pickup");
+  const [method, setMethod] = useState(
+    s.cart.some((x) => x.options?.method === "delivery")
+      ? "delivery"
+      : "pickup",
+  );
   const [confirmed, setConfirmed] = useState("");
-  const total =
-    discounted(
-      s.cart.reduce(
-        (a, x) =>
-          a + (x.price ?? s.catalog.find((p) => p.id === x.id)!.price) * x.qty,
-        0,
-      ),
-      s.promo,
-    ) + (method === "delivery" ? 5 : 0);
+  const [error, setError] = useState("");
+  const totals = cartTotals(s, method);
+  const total = totals.total;
   if (confirmed)
     return (
       <div className="page confirmation">
@@ -771,28 +936,52 @@ function Checkout() {
             form.reportValidity();
             return;
           }
+          const counts = new Map<string, number>();
+          s.cart.forEach((x) =>
+            counts.set(x.id, (counts.get(x.id) || 0) + x.qty),
+          );
+          if (
+            [...counts].some(([id, qty]) => availability(s, id).quantity < qty)
+          ) {
+            setError(
+              t(
+                "Nepietiek demo krājumu. Atgriezies grozā un izvēlies alternatīvu.",
+                "Недостаточно демо-запаса. Вернитесь в корзину и выберите замену.",
+                "Not enough demo stock. Return to the bag and choose an alternative.",
+              ),
+            );
+            return;
+          }
           const id = uid();
-          set((o) => ({
-            ...o,
-            orders: [
-              ...o.orders,
+          set((o) =>
+            consumeInventory(
               {
-                id,
-                date: String(data.get("date")),
-                time: String(data.get("time")),
-                message: String(data.get("message")),
-                total,
-                items: o.cart,
-                method,
+                ...o,
+                orders: [
+                  ...o.orders,
+                  {
+                    id,
+                    date: String(data.get("date")),
+                    time: String(data.get("time")),
+                    message: String(data.get("message")),
+                    total,
+                    items: o.cart,
+                    method,
+                  },
+                ],
+                cart: [],
+                promo: "",
               },
-            ],
-            cart: [],
-            promo: "",
-          }));
+              o.cart,
+            ),
+          );
           setConfirmed(id);
         }}
       >
         <div className="panel form-panel">
+          <p className="error" role="alert">
+            {error}
+          </p>
           <h2>{t("Par tevi", "О вас", "A little about you")}</h2>
           <div className="form-grid">
             <label>
@@ -803,6 +992,7 @@ function Checkout() {
                 autoComplete="off"
                 maxLength={80}
                 placeholder="Alex Demo"
+                defaultValue="Alex Demo"
               />
             </label>
             <label>
@@ -813,6 +1003,7 @@ function Checkout() {
                 name="email"
                 autoComplete="off"
                 placeholder="alex@example.com"
+                defaultValue="alex@example.com"
               />
             </label>
           </div>
@@ -898,22 +1089,21 @@ function Checkout() {
                 {pick(s.catalog.find((p) => p.id === x.id)!.name, s.lang)} ×{" "}
                 {x.qty}
               </span>
-              <b>
-                {money(
-                  (x.price ?? s.catalog.find((p) => p.id === x.id)!.price) *
-                    x.qty,
-                )}
-              </b>
+              <b>{money(linePrice(x, s.catalog) * x.qty, s.lang)}</b>
             </div>
           ))}
-          {s.promo && <p>BLOOM10 · −10%</p>}
+          {s.promo && (
+            <p>
+              {s.promo} · −{money(totals.discount, s.lang)}
+            </p>
+          )}
           <div className="summary-line">
             <span>{t("Piegāde", "Доставка", "Delivery")}</span>
-            <b>{money(method === "delivery" ? 5 : 0)}</b>
+            <b>{money(method === "delivery" ? 5 : 0, s.lang)}</b>
           </div>
           <div className="summary-total">
             <span>{t("Kopā", "Итого", "Total")}</span>
-            <b>{money(total)}</b>
+            <b>{money(total, s.lang)}</b>
           </div>
           <p className="muted">
             {t(

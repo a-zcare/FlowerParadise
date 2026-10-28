@@ -1,27 +1,30 @@
-import { useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
-  Bell,
-  Plus,
-  Pencil,
-  Trash2,
-  CalendarDays,
-  Gift,
-  Flower2,
   ArrowUpRight,
-  Check,
-  ShoppingBag,
-  Heart,
-  Package,
-  Leaf,
-  Settings,
   BarChart3,
+  Bell,
+  CalendarDays,
+  Check,
   Clock3,
   Copy,
+  Flower2,
+  Gift,
+  Heart,
+  Leaf,
+  Package,
+  Pencil,
+  Plus,
+  Settings,
+  ShoppingBag,
+  Trash2,
 } from "lucide-react";
-import { useStore, uid, type Reminder } from "./store";
-import { useT, Title, Demo, Modal, Empty, ProductCard, IconButton } from "./ui";
-import { pick, money, future, nextEvent, categories, type Text } from "./data";
+import { useState } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { categories, future, money, nextEvent, pick, type Text } from "./data";
+import Operations from "./Operations";
+import { ReorderButton } from "./Personal";
+import { uid, useStore, type Reminder } from "./store";
+import { Demo, Empty, IconButton, Modal, ProductCard, Title, useT } from "./ui";
+import { AdminVending } from "./Vending";
 export default function Dashboard() {
   const path = useLocation().pathname;
   return path === "/reminders" ? (
@@ -410,10 +413,13 @@ function Reminders() {
   );
 }
 function Account() {
-  const { s, set, toast } = useStore();
+  const { s, set, toast, reset } = useStore();
   const t = useT();
   const [params, setParams] = useSearchParams();
-  const tab = params.get("tab") || "overview";
+  const tab =
+    useLocation().pathname === "/wishlist"
+      ? "wishlist"
+      : params.get("tab") || "overview";
   const tabs = [
     ["overview", t("Pārskats", "Обзор", "Overview")],
     ["wishlist", t("Vēlmju saraksts", "Избранное", "Wishlist")],
@@ -457,6 +463,14 @@ function Account() {
         <Link to="/cart">
           <ShoppingBag size={16} />
           {t("Grozs", "Корзина", "Bag")} ({s.cart.length})
+        </Link>
+        <Link to="/planner">
+          <CalendarDays size={16} />
+          {t(
+            "Gada dāvanu plāns",
+            "План подарков на год",
+            "Annual gift planner",
+          )}
         </Link>
         <Link to="/reminders">
           <Bell size={16} />
@@ -612,7 +626,8 @@ function Account() {
                     </span>
                   ))}
                 </div>
-                <strong>{money(o.total)}</strong>
+                <ReorderButton order={o} />
+                <strong>{money(o.total, s.lang)}</strong>
                 <span className="badge-static">
                   {t("Demo apstiprināts", "Демо подтверждён", "Demo confirmed")}
                 </span>
@@ -694,7 +709,7 @@ function Account() {
                   <h3>{pick(frequencies[p.frequency], s.lang)}</h3>
                   <p>
                     {p.months} {t("mēneši", "месяцев", "months")} ·{" "}
-                    {money(p.price)}/{t("mēn.", "мес.", "mo.")}
+                    {money(p.price, s.lang)}/{t("mēn.", "мес.", "mo.")}
                   </p>
                 </div>
                 <button
@@ -734,7 +749,7 @@ function Account() {
                 <Gift />
                 <div>
                   <h3>
-                    {money(g.amount)} · {g.code}
+                    {money(g.amount, s.lang)} · {g.code}
                   </h3>
                   <p>{g.message}</p>
                   <small>
@@ -880,34 +895,11 @@ function Account() {
               "Preferences save automatically on this device only. No sensitive information is requested.",
             )}
           </p>
-          <button
-            className="btn outline"
-            onClick={() => {
-              set((o) => ({
-                ...o,
-                cart: [],
-                wishlist: [],
-                orders: [],
-                reservations: [],
-                subscriptions: [],
-                reminders: [],
-                gifts: [],
-                picked: [],
-                promo: "",
-              }));
-              toast(
-                t(
-                  "Personiskie demo dati notīrīti",
-                  "Личные демо-данные очищены",
-                  "Personal demo data cleared",
-                ),
-              );
-            }}
-          >
+          <button className="btn outline" onClick={reset}>
             {t(
-              "Notīrīt manus demo datus",
-              "Очистить мои демо-данные",
-              "Clear my demo data",
+              "Atiestatīt visus demo datus",
+              "Сбросить все демо-данные",
+              "Reset all demo data",
             )}
           </button>
         </div>
@@ -918,7 +910,9 @@ function Account() {
 function Admin() {
   const { s, set, toast } = useStore();
   const t = useT();
-  const [tab, setTab] = useState("overview");
+  const [adminParams, setAdminParams] = useSearchParams();
+  const tab = adminParams.get("view") || "overview";
+  const setTab = (view: string) => setAdminParams({ view });
   const [month, setMonth] = useState(0);
   const [bar, setBar] = useState<number | null>(null);
   const [edit, setEdit] = useState<string | null>(null);
@@ -940,6 +934,14 @@ function Admin() {
     ["marketing", t("Mārketings", "Маркетинг", "Marketing")],
     ["reminders", t("Atgādinājumi", "Напоминания", "Reminders")],
     ["subscriptions", t("Abonementi", "Подписки", "Subscriptions")],
+    ["freshness", t("Svaigums", "Свежесть", "Freshness")],
+    ["waste", t("Zudumi", "Потери", "Waste")],
+    ["maintenance", t("Apkope", "Обслуживание", "Maintenance")],
+    [
+      "profitability",
+      t("Finanšu modelis", "Финансовая модель", "Profitability"),
+    ],
+    ["discounts", t("Atlaides", "Скидки", "Discounts")],
     ["settings", t("Iestatījumi", "Настройки", "Settings")],
   ];
   const p = s.catalog.find((p) => p.id === edit);
@@ -1003,7 +1005,7 @@ function Admin() {
             <div className="stats-grid">
               {[
                 {
-                  n: money(2480 + month * 320),
+                  n: money(2480 + month * 320, s.lang),
                   l: t(
                     "Parauga apgrozījums",
                     "Пример выручки",
@@ -1109,7 +1111,7 @@ function Admin() {
                 </div>
                 <div className="chart-detail">
                   {bar !== null
-                    ? `${t("Izvēlētā diena", "Выбранный день", "Selected day")} ${bar + 1}: ${money((sample[bar] + month * 5) * 5)}`
+                    ? `${t("Izvēlētā diena", "Выбранный день", "Selected day")} ${bar + 1}: ${money((sample[bar] + month * 5) * 5, s.lang)}`
                     : t(
                         "7 dienu ilustratīvi dati",
                         "Иллюстративные данные за 7 дней",
@@ -1213,7 +1215,16 @@ function Admin() {
               </div>
             </div>
           </>
-        ) : tab === "products" || tab === "inventory" ? (
+        ) : [
+            "inventory",
+            "freshness",
+            "waste",
+            "maintenance",
+            "profitability",
+            "discounts",
+          ].includes(tab) ? (
+          <Operations tab={tab} />
+        ) : tab === "products" ? (
           <div className="panel table-wrap">
             <table>
               <thead>
@@ -1222,24 +1233,16 @@ function Admin() {
                   <th>{t("Kolekcija", "Коллекция", "Collection")}</th>
                   <th>{t("Cena", "Цена", "Price")}</th>
                   <th>{t("Krājums", "Остаток", "Stock")}</th>
-                  {tab === "inventory" && (
-                    <th>
-                      {t(
-                        "Parauga svaigums",
-                        "Пример свежести",
-                        "Sample freshness",
-                      )}
-                    </th>
-                  )}
+
                   <th>{t("Darbība", "Действие", "Action")}</th>
                 </tr>
               </thead>
               <tbody>
-                {s.catalog.map((p, i) => (
+                {s.catalog.map((p) => (
                   <tr key={p.id}>
                     <td>{pick(p.name, s.lang)}</td>
                     <td>{pick(categories[p.category], s.lang)}</td>
-                    <td>{money(p.price)}</td>
+                    <td>{money(p.price, s.lang)}</td>
                     <td>
                       <span
                         className={p.stock < 3 ? "low-stock" : "badge-static"}
@@ -1247,33 +1250,7 @@ function Admin() {
                         {p.stock}
                       </span>
                     </td>
-                    {tab === "inventory" && (
-                      <td>
-                        {p.category < 7 ? (
-                          <>
-                            <meter
-                              min={0}
-                              max={100}
-                              value={95 - (i % 5) * 12}
-                            />
-                            <small>
-                              {(i % 5) + 1}{" "}
-                              {t(
-                                "dienas · paraugs",
-                                "дней · пример",
-                                "days · sample",
-                              )}
-                            </small>
-                          </>
-                        ) : (
-                          t(
-                            "Nav svaigi ziedi",
-                            "Не срезанные цветы",
-                            "Not fresh-cut",
-                          )
-                        )}
-                      </td>
-                    )}
+
                     <td>
                       <button
                         className="text-link"
@@ -1289,65 +1266,13 @@ function Admin() {
             </table>
           </div>
         ) : tab === "vending" ? (
-          <>
-            <div className="service-grid">
-              {[0, 1, 2, 3].map((i) => (
-                <div className="panel" key={i}>
-                  <h2>0{i + 1}</h2>
-                  <p>
-                    {s.picked.includes(i)
-                      ? t("Saņemts", "Получен", "Collected")
-                      : s.reservations.some(
-                            (r) =>
-                              r.product === `slot-${i}` &&
-                              r.status === "reserved",
-                          ) || i === 3
-                        ? t("Rezervēts", "Забронирован", "Reserved")
-                        : t("Pieejams", "Доступен", "Available")}
-                  </p>
-                  <Link className="text-link" to="/vending">
-                    {t(
-                      "Atvērt simulatoru",
-                      "Открыть симулятор",
-                      "Open simulator",
-                    )}
-                    <ArrowUpRight size={15} />
-                  </Link>
-                </div>
-              ))}
-            </div>
-            <button
-              className="btn outline"
-              onClick={() => {
-                set((o) => ({
-                  ...o,
-                  picked: [],
-                  reservations: o.reservations.filter(
-                    (r) => !r.product.startsWith("slot-"),
-                  ),
-                }));
-                toast(
-                  t(
-                    "Demo automāts atjaunots",
-                    "Демо-автомат обновлён",
-                    "Demo machine restocked",
-                  ),
-                );
-              }}
-            >
-              {t(
-                "Atjaunot demo nodalījumus",
-                "Обновить демо-ячейки",
-                "Restock demo compartments",
-              )}
-            </button>
-          </>
+          <AdminVending />
         ) : tab === "orders" ? (
           <AdminRecords
             rows={s.orders.map((o) => ({
               id: o.id,
               title: `#${o.id.slice(0, 8)}`,
-              detail: `${o.date} · ${money(o.total)}`,
+              detail: `${o.date} · ${money(o.total, s.lang)}`,
               status: t(
                 "Demo apstiprināts",
                 "Демо подтверждён",
@@ -1508,7 +1433,7 @@ function Admin() {
             rows={s.subscriptions.map((p) => ({
               id: p.id,
               title: pick(frequencies[p.frequency], s.lang),
-              detail: `${p.months} × ${money(p.price)}`,
+              detail: `${p.months} × ${money(p.price, s.lang)}`,
               status: t("Demo aktīvs", "Демо активна", "Demo active"),
             }))}
           />

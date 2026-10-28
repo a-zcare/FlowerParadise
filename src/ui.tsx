@@ -1,12 +1,11 @@
+import { ArrowUpRight, Flower2, Heart, Plus, X } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Heart, Plus, X, Flower2 } from "lucide-react";
+import { categories, img, money, pick, type Product } from "./data";
+import { AvailabilityBadge, CompareButton } from "./feature-ui";
+import { useT } from "./i18n";
 import { useStore } from "./store";
-import { pick, money, img, categories, type Product } from "./data";
-export const useT = () => {
-  const { s } = useStore();
-  return (lv: string, ru: string, en: string) => pick([lv, ru, en], s.lang);
-};
+export { useT } from "./i18n";
 export function IconButton({
   label,
   children,
@@ -20,6 +19,7 @@ export function IconButton({
 }) {
   return (
     <button
+      type="button"
       className={`icon-btn ${active ? "active" : ""}`}
       aria-label={label}
       title={label}
@@ -124,7 +124,7 @@ export function ProductCard({
           <Heart size={19} fill={saved ? "currentColor" : "none"} />
         </IconButton>
         {onQuick && (
-          <button className="quick" onClick={() => onQuick(p)}>
+          <button type="button" className="quick" onClick={() => onQuick(p)}>
             {t("Ātrais skats", "Быстрый просмотр", "Quick view")}
           </button>
         )}
@@ -136,12 +136,12 @@ export function ProductCard({
       <div className="product-bottom">
         <Link to={`/product/${p.id}`}>
           <h3>{pick(p.name, s.lang)}</h3>
-          <span>{money(p.price)}</span>
+          <span>{money(p.price, s.lang)}</span>
         </Link>
         <IconButton
           label={t("Pievienot grozam", "Добавить в корзину", "Add to bag")}
           onClick={() => {
-            add(p.id);
+            if (!add(p.id)) return;
             toast(
               t(
                 "Pievienots grozam",
@@ -153,6 +153,10 @@ export function ProductCard({
         >
           <Plus size={19} />
         </IconButton>
+      </div>
+      <div className="product-utilities">
+        <AvailabilityBadge p={p} />
+        <CompareButton id={p.id} />
       </div>
     </article>
   );

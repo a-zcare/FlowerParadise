@@ -1,3 +1,4 @@
+import { addDays, dateKey } from "./date-utils";
 export type Lang = "lv" | "ru" | "en";
 export type Text = [string, string, string];
 export const pick = (v: Text, l: Lang) =>
@@ -111,6 +112,11 @@ export interface Product {
   composition: Text;
   size: string;
   stock: number;
+  description: Text;
+  care: Text;
+  availabilityType: "pickup-delivery" | "preorder";
+  customizable: boolean;
+  flowerCount?: number;
 }
 const compositions: Text[] = [
   ["Rozes, eikalipts", "Розы, эвкалипт", "Roses, eucalyptus"],
@@ -163,25 +169,53 @@ export const products: Product[] = names.map((name, i) => ({
     85, 100, 25, 35, 45, 28, 32, 22, 45, 39, 65, 5, 6, 5, 18, 14, 10,
   ][i],
   photo: photos[i],
+  description: [
+    name[0] +
+      " — rūpīgi izvēlēta kompozīcija sirsnīgam mirklim. Fotogrāfija ilustrē stilu; sezonas sastāvs var mainīties.",
+    name[1] +
+      " — композиция, подобранная для тёплого момента. Фото передаёт стиль; сезонный состав может меняться.",
+    name[2] +
+      " — a considered composition for a heartfelt moment. Photography illustrates the style; seasonal stems may vary.",
+  ],
+  care:
+    i < 21
+      ? [
+          "Atjauno kātu griezumu, maini ūdeni ik pēc 1–2 dienām un novieto vēsumā, prom no saules un augļiem.",
+          "Подрежьте стебли, меняйте воду каждые 1–2 дня, держите в прохладе вдали от солнца и фруктов.",
+          "Trim stems, refresh water every 1–2 days and keep cool, away from sunlight and fruit.",
+        ]
+      : i < 27
+        ? [
+            "Sargā no mitruma un saules. Neliec ūdenī.",
+            "Берегите от влаги и солнца. Не ставьте в воду.",
+            "Keep away from moisture and sunlight. Do not place in water.",
+          ]
+        : [
+            "Uzglabā sausā vietā un ievēro pievienotos norādījumus.",
+            "Храните в сухом месте и следуйте прилагаемым инструкциям.",
+            "Store dry and follow the included instructions.",
+          ],
+  availabilityType: i === 20 ? "preorder" : "pickup-delivery",
+  customizable: i < 7 * 3,
   color: i % 4,
   occasion: i % 4,
   composition: compositions[Math.floor(i / 3)],
   size: i < 21 ? "35–45 cm" : i < 27 ? "20–30 cm" : "15–25 cm",
   stock: i % 7 === 0 ? 2 : 5 + (i % 8),
 }));
-export const money = (v: number) =>
-  new Intl.NumberFormat("lv-LV", { style: "currency", currency: "EUR" }).format(
-    v,
-  );
+export const money = (v: number, lang: Lang = "lv") =>
+  new Intl.NumberFormat({ lv: "lv-LV", ru: "ru-LV", en: "en-IE" }[lang], {
+    style: "currency",
+    currency: "EUR",
+  }).format(v);
 export const colors: Text[] = [
   ["Rozā", "Розовый", "Pink"],
   ["Sarkans", "Красный", "Red"],
   ["Balts", "Белый", "White"],
   ["Jaukts", "Разноцветный", "Mixed"],
 ];
-export const today = () => new Date().toISOString().slice(0, 10);
-export const future = (days = 1) =>
-  new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+export const today = dateKey;
+export const future = (days = 1) => addDays(days);
 export function estimate(
   size: number,
   card: boolean,

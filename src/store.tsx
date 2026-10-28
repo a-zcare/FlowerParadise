@@ -1,174 +1,258 @@
 import {
   createContext,
+  useCallback,
   useContext,
-  useState,
   useEffect,
+  useState,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
 } from "react";
-import type { Lang, Product } from "./data";
-import { products } from "./data";
-export interface CartItem {
-  id: string;
-  qty: number;
-  note?: string;
-  price?: number;
-}
-export interface Reservation {
-  id: string;
-  product: string;
-  date: string;
-  time: string;
-  method: string;
-  code: string;
-  status: string;
-  message?: string;
-}
-export interface Reminder {
-  id: string;
-  name: string;
-  event: string;
-  date: string;
-  annual: boolean;
-  days: number;
-  channel: string;
-  snoozed?: boolean;
-  dismissed?: boolean;
-}
-export interface Order {
-  time?: string;
-  message?: string;
-  id: string;
-  date: string;
-  total: number;
-  items: CartItem[];
-  method: string;
-}
-export interface Subscription {
-  id: string;
-  frequency: string;
-  months: number;
-  price: number;
-  method: string;
-  preference: string;
-}
-export interface Gift {
-  recipient?: string;
-  date?: string;
-  id: string;
-  amount: number;
-  message: string;
-  code: string;
-  redeemed: boolean;
-}
-interface State {
-  lang: Lang;
-  dark: boolean;
-  cart: CartItem[];
-  wishlist: string[];
-  reservations: Reservation[];
-  reminders: Reminder[];
-  orders: Order[];
-  subscriptions: Subscription[];
-  gifts: Gift[];
-  catalog: Product[];
-  picked: number[];
-  preferences: { channel: string; fresh: boolean };
-  promo: string;
-}
-const initial: State = {
-  lang: "lv",
-  dark: false,
-  cart: [],
-  wishlist: [],
-  reservations: [],
-  reminders: [],
-  orders: [],
-  subscriptions: [],
-  gifts: [],
-  catalog: products,
-  picked: [],
-  preferences: { channel: "email", fresh: false },
-  promo: "",
-};
-export function readState(): State {
+import { pick, type Lang } from "./data";
+import {
+  STORAGE_KEY,
+  availability,
+  code,
+  collectVending,
+  consumeInventory,
+  id,
+  initialState,
+  linePrice,
+  prepareReorder,
+  reconcile,
+  reserveVending,
+  variantPrice,
+} from "./domain";
+import type { CartItem, DemoState, ProductOptions } from "./models";
+import { demoRepository } from "./repository";
+export type {
+  CartItem,
+  Gift,
+  Order,
+  Reminder,
+  Reservation,
+  Subscription,
+} from "./models";
+export { consumeInventory, linePrice };
+const initial = initialState();
+export function readState(): DemoState {
   try {
-    const saved: Partial<State> = JSON.parse(
-      localStorage.getItem("flower-paradise-v1") || "null",
-    );
-    if (
-      !saved ||
-      !Array.isArray(saved.cart) ||
-      !["lv", "ru", "en"].includes(saved.lang || "")
-    )
-      return initial;
-    const catalog = products.map((p) => {
-      const custom = saved.catalog?.find((x) => x.id === p.id);
-      return custom
-        ? { ...p, name: custom.name, price: custom.price, stock: custom.stock }
-        : p;
-    });
-    return { ...initial, ...saved, catalog };
+    return demoRepository(localStorage).load();
   } catch {
-    return initial;
+    return initialState();
   }
 }
-const Context = createContext<{
-  s: State;
-  set: React.Dispatch<React.SetStateAction<State>>;
+interface Store {
+  s: DemoState;
+  set: Dispatch<SetStateAction<DemoState>>;
   toast: (v: string) => void;
-  add: (id: string, qty?: number, note?: string, price?: number) => void;
-}>({ s: initial, set: () => {}, toast: () => {}, add: () => {} });
+  add: (
+    id: string,
+    qty?: number,
+    note?: string,
+    price?: number,
+    options?: ProductOptions,
+  ) => boolean;
+  compare: (id: string) => void;
+  reset: () => void;
+  reserveSlot: (slotId: string) => string | null;
+  redeemPickup: (value: string) => boolean;
+  reorder: (items: CartItem[]) => { added: number; unavailable: string[] };
+  actualPhotos: Record<string, string>;
+  setActualPhoto: (id: string, url?: string) => void;
+}
+const Context = createContext<Store>({
+  s: initial,
+  set: () => {},
+  toast: () => {},
+  add: () => false,
+  compare: () => {},
+  reset: () => {},
+  reserveSlot: () => null,
+  redeemPickup: () => false,
+  reorder: () => ({ added: 0, unavailable: [] }),
+  actualPhotos: {},
+  setActualPhoto: () => {},
+});
 export function Provider({ children }: { children: ReactNode }) {
-  const [s, set] = useState<State>(readState);
+  const [s, rawSet] = useState<DemoState>(readState);
   const [msg, toast] = useState("");
+  const [actualPhotos, setPhotos] = useState<Record<string, string>>({});
+  const set: Dispatch<SetStateAction<DemoState>> = useCallback(
+    (action) =>
+      rawSet((old) =>
+        reconcile(typeof action === "function" ? action(old) : action, old),
+      ),
+    [],
+  );
+  const local = (lv: string, ru: string, en: string) =>
+    pick([lv, ru, en], s.lang);
   useEffect(() => {
     const sync = (e: StorageEvent) => {
-      if (e.key === "flower-paradise-v1") set(readState());
+      if (e.key === STORAGE_KEY) rawSet(readState());
     };
     window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    const timer = setInterval(() => rawSet((old) => reconcile(old)), 60000);
+    return () => {
+      window.removeEventListener("storage", sync);
+      clearInterval(timer);
+    };
   }, []);
   useEffect(() => {
     try {
-      localStorage.setItem("flower-paradise-v1", JSON.stringify(s));
+      demoRepository(localStorage).save(s);
     } catch {
-      /* Full or disabled storage: the demo remains usable in memory. */
+      /* Continue in memory when storage is unavailable. */
     }
     document.documentElement.lang = s.lang;
     document.documentElement.dataset.theme = s.dark ? "dark" : "light";
   }, [s]);
   useEffect(() => {
-    if (msg) {
-      const t = setTimeout(() => toast(""), 3500);
-      return () => clearTimeout(t);
-    }
+    if (!msg) return;
+    const timer = setTimeout(() => toast(""), 4000);
+    return () => clearTimeout(timer);
   }, [msg]);
-  const add = (id: string, qty = 1, note = "", price?: number) =>
+  function add(
+    productId: string,
+    qty = 1,
+    note = "",
+    price?: number,
+    options?: ProductOptions,
+  ) {
+    const p = s.catalog.find((p) => p.id === productId);
+    const existing = s.cart
+      .filter((x) => x.id === productId)
+      .reduce((n, x) => n + x.qty, 0);
+    if (
+      !p ||
+      !Number.isInteger(qty) ||
+      qty < 1 ||
+      existing + qty > Math.min(20, availability(s, productId).quantity)
+    ) {
+      toast(
+        local(
+          "Nepietiek demo krājumu. Izvēlies citu pušķi.",
+          "Недостаточно демо-запаса. Выберите другой букет.",
+          "Not enough demo stock. Choose another bouquet.",
+        ),
+      );
+      return false;
+    }
+    const actualPrice = options ? variantPrice(p, options) : price;
     set((old) => {
       const found = old.cart.find(
-        (x) => x.id === id && x.note === note && x.price === price,
+        (x) =>
+          x.id === productId &&
+          x.note === note &&
+          x.price === actualPrice &&
+          JSON.stringify(x.options) === JSON.stringify(options),
       );
       return {
         ...old,
         cart: found
           ? old.cart.map((x) =>
-              x === found ? { ...x, qty: Math.min(x.qty + qty, 20) } : x,
+              x === found ? { ...x, qty: Math.min(20, x.qty + qty) } : x,
             )
-          : [...old.cart, { id, qty, note, price }],
+          : [
+              ...old.cart,
+              { id: productId, qty, note, price: actualPrice, options },
+            ],
       };
     });
+    return true;
+  }
+  function compare(productId: string) {
+    if (s.comparison.includes(productId)) {
+      set((o) => ({
+        ...o,
+        comparison: o.comparison.filter((x) => x !== productId),
+      }));
+      return;
+    }
+    if (s.comparison.length === 3) {
+      toast(
+        local(
+          "Salīdzini ne vairāk par trim pušķiem.",
+          "Сравнить можно не более трёх букетов.",
+          "Compare up to three bouquets.",
+        ),
+      );
+      return;
+    }
+    set((o) => ({ ...o, comparison: [...o.comparison, productId] }));
+    toast(
+      local(
+        "Pievienots salīdzināšanai",
+        "Добавлено к сравнению",
+        "Added to comparison",
+      ),
+    );
+  }
+  function reset() {
+    try {
+      localStorage.removeItem("flower-paradise-v1");
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* In-memory reset is still available. */
+    }
+    setPhotos({});
+    rawSet({ ...initialState(), lang: s.lang, dark: s.dark });
+    toast(
+      local(
+        "Visi demo dati atiestatīti. Valoda un tēma saglabāta.",
+        "Все демо-данные сброшены. Язык и тема сохранены.",
+        "All demo data reset. Language and theme kept.",
+      ),
+    );
+  }
+  function reserveSlot(slotId: string) {
+    const result = reserveVending(s, slotId);
+    if (!result) return null;
+    set(result.state);
+    return result.code;
+  }
+  function redeemPickup(value: string) {
+    const next = collectVending(s, value);
+    if (!next) return false;
+    set(next);
+    return true;
+  }
+  function reorder(items: CartItem[]) {
+    const result = prepareReorder(s, items);
+    set((o) => ({ ...o, cart: result.cart }));
+    return { added: result.added, unavailable: result.unavailable };
+  }
   return (
-    <Context.Provider value={{ s, set, toast, add }}>
+    <Context.Provider
+      value={{
+        s,
+        set,
+        toast,
+        add,
+        compare,
+        reset,
+        reserveSlot,
+        redeemPickup,
+        reorder,
+        actualPhotos,
+        setActualPhoto: (productId, url) =>
+          setPhotos((old) => {
+            const copy = { ...old };
+            if (url) copy[productId] = url;
+            else delete copy[productId];
+            return copy;
+          }),
+      }}
+    >
       {children}
-      <div className="toast" role="status">
+      <div className="toast" role="status" aria-live="polite">
         {msg}
       </div>
     </Context.Provider>
   );
 }
 export const useStore = () => useContext(Context);
-export const uid = () =>
-  globalThis.crypto?.randomUUID?.() ??
-  `demo-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
-export const pickupCode = () =>
-  String(Math.floor(100000 + Math.random() * 900000));
+export const uid = id;
+export const pickupCode = code;
+export const locale = (lang: Lang) =>
+  ({ lv: "lv-LV", ru: "ru-LV", en: "en-IE" })[lang];

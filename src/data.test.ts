@@ -1,13 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  products,
   categories,
+  conflict,
+  discounted,
+  estimate,
+  nextEvent,
   photos,
   pick,
-  estimate,
-  discounted,
-  conflict,
-  nextEvent,
+  products,
 } from "./data";
 describe("catalog integrity", () => {
   it("has 36 unique products and images across all collections", () => {

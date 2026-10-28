@@ -1,31 +1,36 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import {
-  Flower2,
-  ShoppingBag,
-  Heart,
-  UserRound,
-  Menu,
-  X,
-  Sun,
-  Moon,
-  ArrowUpRight,
   ArrowRight,
-  Clock3,
-  Leaf,
-  Gift,
-  MapPin,
-  Instagram,
+  ArrowUpRight,
   Check,
+  Clock3,
+  Flower2,
+  Gift,
+  Heart,
+  Instagram,
+  Leaf,
+  MapPin,
+  Menu,
+  Moon,
   Search,
+  ShoppingBag,
+  Sun,
+  UserRound,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useStore } from "./store";
-import { useT, IconButton, ProductCard, Demo } from "./ui";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { img } from "./data";
+import HomeExtras from "./HomeExtras";
+import { MobileNavigation, PageContext, PWAControls } from "./Shell";
+import { useStore } from "./store";
+import { Demo, IconButton, ProductCard, useT } from "./ui";
 const Shop = lazy(() => import("./Shop"));
 const Experiences = lazy(() => import("./Experiences"));
 const Dashboard = lazy(() => import("./Dashboard"));
+const Discovery = lazy(() => import("./Discovery"));
+const Personal = lazy(() => import("./Personal"));
+const Info = lazy(() => import("./Info"));
 export default function App() {
   const { s, set } = useStore();
   const t = useT();
@@ -34,13 +39,12 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
     setMenu(false);
-    document.title = `Flower Paradise · ${location.pathname === "/" ? "Daugavpils" : location.pathname.slice(1).split("/")[0]}`;
   }, [location.pathname]);
   const nav = [
     ["/shop", t("Ziedi un dāvanas", "Цветы и подарки", "Flowers & gifts")],
     ["/vending", t("Ziedi 24/7", "Цветы 24/7", "Flowers 24/7")],
     ["/subscriptions", t("Abonementi", "Подписки", "Subscriptions")],
-    ["/reminders", t("Īpašie datumi", "Важные даты", "Important dates")],
+    ["/discover", t("Atklāj", "Откройте", "Discover")],
   ];
   return (
     <>
@@ -83,6 +87,15 @@ export default function App() {
               {label}
             </NavLink>
           ))}
+          <NavLink className="mobile-only" to="/reminders">
+            {t("Svarīgi datumi", "Важные даты", "Important dates")}
+          </NavLink>
+          <button
+            className="mobile-only menu-theme"
+            onClick={() => set((o) => ({ ...o, dark: !o.dark }))}
+          >
+            {t("Mainīt tēmu", "Сменить тему", "Toggle colour mode")}
+          </button>
           <NavLink className="mobile-only" to="/gifts">
             {t("Dāvanas", "Подарки", "Gifts")}
           </NavLink>
@@ -150,6 +163,7 @@ export default function App() {
         </div>
       </header>
       <main id="main" tabIndex={-1}>
+        <PageContext />
         <Suspense
           fallback={
             <div className="skeleton">
@@ -162,6 +176,30 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
+            {[
+              "/discover",
+              "/match",
+              "/available",
+              "/compare",
+              "/gift-builder",
+            ].map((path) => (
+              <Route key={path} path={path} element={<Discovery />} />
+            ))}
+            {["/secret-gift", "/planner"].map((path) => (
+              <Route key={path} path={path} element={<Personal />} />
+            ))}
+            {[
+              "/about",
+              "/delivery",
+              "/faq",
+              "/contact",
+              "/privacy",
+              "/terms",
+              "/passport/:id",
+            ].map((path) => (
+              <Route key={path} path={path} element={<Info />} />
+            ))}
+            <Route path="/wishlist" element={<Dashboard />} />
             <Route path="/product/:id" element={<Shop />} />
             <Route path="/cart" element={<Shop />} />
             <Route path="/checkout" element={<Shop />} />
@@ -169,6 +207,7 @@ export default function App() {
             <Route path="/reserve" element={<Experiences />} />
             <Route path="/customize" element={<Experiences />} />
             <Route path="/gifts" element={<Experiences />} />
+            <Route path="/certificates" element={<Experiences />} />
             <Route path="/subscriptions" element={<Experiences />} />
             <Route path="/reminders" element={<Dashboard />} />
             <Route path="/account" element={<Dashboard />} />
@@ -188,6 +227,8 @@ export default function App() {
         </Suspense>
       </main>
       <Footer />
+      <MobileNavigation />
+      <PWAControls />
     </>
   );
 }
@@ -360,6 +401,7 @@ function Home() {
           ))}
         </div>
       </section>
+      <HomeExtras />
       <section className="occasion-section section">
         <div className="section-heading">
           <div>
@@ -832,6 +874,16 @@ function Footer() {
         </div>
         <div>
           <h4>{t("Atklāj", "Откройте", "Discover")}</h4>
+          <Link to="/discover">
+            {t("Visas iespējas", "Все возможности", "Explore the experience")}
+          </Link>
+          <Link to="/match">Flower Match</Link>
+          <Link to="/available">
+            {t("Pieejams tagad", "Доступно сейчас", "Available now")}
+          </Link>
+          <Link to="/compare">
+            {t("Salīdzināšana", "Сравнение", "Comparison")}
+          </Link>
           <Link to="/shop">
             {t("Ziedi un dāvanas", "Цветы и подарки", "Flowers & gifts")}
           </Link>
@@ -857,6 +909,16 @@ function Footer() {
           <Link to="/reserve">
             {t("Rezervācija", "Бронирование", "Reservations")}
           </Link>
+          <Link to="/planner">
+            {t(
+              "Gada dāvanu plāns",
+              "План подарков на год",
+              "Annual gift planner",
+            )}
+          </Link>
+          <Link to="/secret-gift">
+            {t("Slepenā dāvana", "Тайный подарок", "Secret gift")}
+          </Link>
           <Link to="/reminders">
             {t("Atgādinājumi", "Напоминания", "Reminders")}
           </Link>
@@ -866,6 +928,18 @@ function Footer() {
         </div>
         <div>
           <h4>{t("Sadarbība", "Сотрудничество", "Let’s grow together")}</h4>
+          <Link to="/about">
+            {t("Mūsu stāsts", "Наша история", "Our story")}
+          </Link>
+          <Link to="/contact">{t("Saziņa", "Контакты", "Contact")}</Link>
+          <Link to="/delivery">
+            {t(
+              "Piegāde un saņemšana",
+              "Доставка и самовывоз",
+              "Delivery & pickup",
+            )}
+          </Link>
+          <Link to="/faq">{t("Jautājumi", "Вопросы", "FAQ")}</Link>
           <Link to="/gifts?corporate=1">
             {t("Ziedi uzņēmumiem", "Цветы для бизнеса", "Corporate flowers")}
           </Link>
@@ -898,6 +972,14 @@ function Footer() {
             "Demo concept · All prices are illustrative",
           )}
         </span>
+        <div className="footer-policy-links">
+          <Link to="/privacy">
+            {t("Privātums", "Конфиденциальность", "Privacy")}
+          </Link>
+          <Link to="/terms">
+            {t("Demo noteikumi", "Условия демо", "Demo terms")}
+          </Link>
+        </div>
         <Link to="/account?tab=settings">
           {t(
             "Privātums un iestatījumi",

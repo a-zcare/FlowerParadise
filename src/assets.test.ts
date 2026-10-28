@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 import { photos } from "./data";
 describe("bundled photography", () => {
   it("provides small and large WebP files for every product", () => {

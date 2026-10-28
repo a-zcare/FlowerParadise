@@ -1,19 +1,19 @@
-import { useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   ArrowUpRight,
-  Check,
-  LockKeyhole,
-  UnlockKeyhole,
-  Gift,
-  Flower2,
   CalendarDays,
+  Check,
   Clock3,
+  Flower2,
+  Gift,
   Leaf,
 } from "lucide-react";
-import { useStore, uid, pickupCode } from "./store";
-import { useT, Title, Demo, Modal, ProductCard } from "./ui";
-import { pick, money, img, colors, future, estimate, conflict } from "./data";
+import { useState } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { colors, estimate, future, img, money, pick } from "./data";
+import { reserveFuture } from "./domain";
+import { pickupCode, uid, useStore } from "./store";
+import { Demo, Modal, ProductCard, Title, useT } from "./ui";
+import Vending from "./Vending";
 export default function Experiences() {
   const path = useLocation().pathname;
   return path === "/vending" ? (
@@ -28,321 +28,14 @@ export default function Experiences() {
     <Gifts />
   );
 }
-function Vending() {
-  const { s, set, toast } = useStore();
-  const t = useT();
-  const [selected, select] = useState<number | null>(null);
-  const [code, setCode] = useState("");
-  const [opened, open] = useState<number | null>(null);
-  const [receipt, setReceipt] = useState("");
-  const [error, setError] = useState("");
-  const bouquets = [s.catalog[0], s.catalog[4], s.catalog[9], s.catalog[18]];
-  const reservation = (i: number) =>
-    s.reservations.find(
-      (r) => r.product === `slot-${i}` && r.status === "reserved",
-    );
-  function reserve() {
-    if (selected === null) return;
-    const c = pickupCode();
-    set((o) => ({
-      ...o,
-      reservations: [
-        ...o.reservations,
-        {
-          id: uid(),
-          product: `slot-${selected}`,
-          date: future(0),
-          time: "24/7",
-          method: "vending",
-          code: c,
-          status: "reserved",
-        },
-      ],
-    }));
-    setReceipt(c);
-    select(null);
-  }
-  function unlock(e: React.FormEvent) {
-    e.preventDefault();
-    const r = s.reservations.find(
-      (r) =>
-        r.code === code.trim() &&
-        r.product.startsWith("slot-") &&
-        r.status === "reserved",
-    );
-    if (!r) {
-      setError(
-        t(
-          "Kods nav derīgs vai jau izmantots.",
-          "Код неверный или уже использован.",
-          "That code is invalid or has already been used.",
-        ),
-      );
-      return;
-    }
-    const n = Number(r.product.split("-")[1]);
-    open(n);
-    setError("");
-    set((o) => ({
-      ...o,
-      reservations: o.reservations.map((a) =>
-        a.id === r.id ? { ...a, status: "collected" } : a,
-      ),
-      picked: [...o.picked, n],
-    }));
-    toast(
-      t(
-        "Nodalījums atvērts! Demo saņemšana pabeigta.",
-        "Ячейка открыта! Демо-получение завершено.",
-        "Your compartment is open! Demo pickup complete.",
-      ),
-    );
-    setCode("");
-  }
-  return (
-    <div className="page">
-      <Title
-        kicker={t(
-          "MĪLESTĪBAI NAV DARBA LAIKA",
-          "У ЛЮБВИ НЕТ РАСПИСАНИЯ",
-          "THOUGHTFULNESS, WITHOUT THE OPENING HOURS",
-        )}
-        title={t(
-          "Ziedi. Jebkurā laikā.",
-          "Цветы. В любое время.",
-          "Flowers. Around the clock.",
-        )}
-        description={t(
-          "Iepazīsti mūsu ziedu automāta konceptu. Izvēlies, rezervē un atver savu ziedu nodalījumu.",
-          "Откройте наш концепт цветочного автомата. Выберите, забронируйте и откройте свою ячейку.",
-          "Meet our flower vending concept. Choose, reserve and unlock your little moment of happiness.",
-        )}
-      />
-      <Demo />
-      <div className="vending-layout">
-        <div className="machine">
-          <div className="machine-brand">
-            <Flower2 /> FLOWER PARADISE <span>24/7</span>
-          </div>
-          <div className="machine-grid">
-            {bouquets.map((p, i) => {
-              const r = reservation(i);
-              const collected = s.picked.includes(i);
-              return (
-                <button
-                  key={i}
-                  className={`compartment ${selected === i ? "selected" : ""} ${opened === i ? "unlocked" : ""} ${collected ? "collected" : ""}`}
-                  disabled={!!r || collected || i === 3}
-                  onClick={() => {
-                    select(i);
-                    setReceipt("");
-                  }}
-                >
-                  <div className="slot-top">
-                    <span>0{i + 1}</span>
-                    <span
-                      className={`status-dot ${r || i === 3 ? "occupied" : ""}`}
-                    >
-                      {collected
-                        ? t("Saņemts", "Получен", "Collected")
-                        : r || i === 3
-                          ? t("Rezervēts", "Забронирован", "Reserved")
-                          : t("Pieejams", "Доступен", "Available")}
-                    </span>
-                  </div>
-                  <img src={img(p.photo, 500)} alt={pick(p.name, s.lang)} />
-                  <div className="slot-bottom">
-                    <div>
-                      <strong>{pick(p.name, s.lang)}</strong>
-                      <small>{money(p.price)}</small>
-                    </div>
-                    {opened === i ? (
-                      <UnlockKeyhole size={20} />
-                    ) : (
-                      <LockKeyhole size={20} />
-                    )}
-                  </div>
-                  <div className="door-glint" />
-                </button>
-              );
-            })}
-          </div>
-          <div className="machine-base">
-            <span>
-              ❋{" "}
-              {t(
-                "Svaigi ziedi. Silti mirkļi.",
-                "Свежие цветы. Тёплые моменты.",
-                "Fresh flowers. Warm feelings.",
-              )}
-            </span>
-            <small>DEMO CONCEPT</small>
-          </div>
-        </div>
-        <div className="vending-controls">
-          <div className="panel">
-            <span className="eyebrow">
-              01 · {t("IZVĒLIES", "ВЫБЕРИТЕ", "CHOOSE")}
-            </span>
-            <h2>
-              {t(
-                "Tavs mazais pārsteigums",
-                "Ваш маленький сюрприз",
-                "Your little surprise",
-              )}
-            </h2>
-            {selected !== null ? (
-              <>
-                <div className="selection-preview">
-                  <img src={img(bouquets[selected].photo, 200)} alt="" />
-                  <div>
-                    <h3>{pick(bouquets[selected].name, s.lang)}</h3>
-                    <p>
-                      {t("Nodalījums", "Ячейка", "Compartment")} 0{selected + 1}
-                    </p>
-                    <strong>{money(bouquets[selected].price)}</strong>
-                  </div>
-                </div>
-                <button className="btn full" onClick={reserve}>
-                  {t(
-                    "Rezervēt · Simulēt maksājumu",
-                    "Бронь · Имитировать оплату",
-                    "Reserve · Simulate payment",
-                  )}
-                  <ArrowUpRight size={17} />
-                </button>
-              </>
-            ) : (
-              <p>
-                {t(
-                  "Pieskaries kādam no pieejamajiem nodalījumiem.",
-                  "Нажмите на доступную ячейку.",
-                  "Tap an available compartment to meet your bouquet.",
-                )}
-              </p>
-            )}
-            {receipt && (
-              <div className="code-receipt">
-                <Check size={22} />
-                <p>
-                  {t(
-                    "Tavs vienreizējais demo kods",
-                    "Ваш одноразовый демо-код",
-                    "Your one-time demo pickup code",
-                  )}
-                </p>
-                <strong>{receipt}</strong>
-                <button
-                  className="text-link"
-                  onClick={() => {
-                    setCode(receipt);
-                    setReceipt("");
-                  }}
-                >
-                  {t(
-                    "Izmantot kodu zemāk",
-                    "Использовать код ниже",
-                    "Use this code below",
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
-          <form className="panel" onSubmit={unlock}>
-            <span className="eyebrow">
-              02 · {t("SAŅEM", "ПОЛУЧИТЕ", "COLLECT")}
-            </span>
-            <h2>
-              {t(
-                "Skaistums aiz sešiem cipariem.",
-                "Красота за шестью цифрами.",
-                "Six digits to something lovely.",
-              )}
-            </h2>
-            <label>
-              {t(
-                "Demo saņemšanas kods",
-                "Демо-код получения",
-                "Demo pickup code",
-              )}
-              <input
-                className="code-input"
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                required
-                value={code}
-                placeholder="000000"
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              />
-            </label>
-            <p className="error" role="alert">
-              {error}
-            </p>
-            <button className="btn outline full">
-              <UnlockKeyhole size={17} />
-              {t("Atvērt nodalījumu", "Открыть ячейку", "Unlock compartment")}
-            </button>
-          </form>
-          <p className="muted">
-            {t(
-              "Šis ir pārlūka simulators. Nav savienojuma ar aparatūru, īstiem krājumiem vai maksājumu sistēmu. Nodalījums 04 ir demonstrācijas rezervācija.",
-              "Это симулятор в браузере. Нет подключения к оборудованию, реальным остаткам или платежам. Ячейка 04 — пример занятой ячейки.",
-              "This browser simulation has no connection to hardware, real inventory or payments. Compartment 04 demonstrates an occupied slot.",
-            )}
-          </p>
-          <Link className="text-link" to="/reserve">
-            {t(
-              "Plāno īpašu datumu? Rezervē iepriekš.",
-              "Планируете особый день? Забронируйте заранее.",
-              "Planning a special date? Reserve ahead.",
-            )}
-            <ArrowUpRight size={16} />
-          </Link>
-        </div>
-      </div>
-      <section className="section">
-        <h2>
-          {t(
-            "Tā darbosies īstais pakalpojums",
-            "Как будет работать реальный сервис",
-            "How the real service could work",
-          )}
-        </h2>
-        <div className="service-grid">
-          {[
-            t(
-              "Tiešsaistē izvēlies svaigu pušķi no pieejamiem nodalījumiem.",
-              "Выберите свежий букет в доступной ячейке онлайн.",
-              "Choose a fresh bouquet online from the available compartments.",
-            ),
-            t(
-              "Pēc apstiprināta maksājuma saņem vienreizēju kodu.",
-              "После подтверждения оплаты получите одноразовый код.",
-              "Receive a one-time code after a confirmed payment.",
-            ),
-            t(
-              "Saņem ziedus sev ērtā laikā. Pakalpojums vēl tiek plānots.",
-              "Заберите цветы в удобное время. Сервис ещё планируется.",
-              "Collect at a time that suits you. The service is still being planned.",
-            ),
-          ].map((x, i) => (
-            <div className="service-card" key={x}>
-              <span className="eyebrow">0{i + 1}</span>
-              <p>{x}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
 function Reserve() {
   const { s, set } = useStore();
   const t = useT();
   const [params] = useSearchParams();
   const [product, setProduct] = useState(
-    params.get("product") || s.catalog[0].id,
+    s.catalog.some((p) => p.id === params.get("product"))
+      ? params.get("product")!
+      : s.catalog[0].id,
   );
   const [method, setMethod] = useState("vending");
   const [date, setDate] = useState(future(1));
@@ -409,51 +102,37 @@ function Reserve() {
           className="checkout-layout"
           onSubmit={(e) => {
             e.preventDefault();
-            if (date < future(1)) {
+            const result = reserveFuture(s, {
+              product,
+              date,
+              time,
+              method,
+              message: msg,
+            });
+            if ("error" in result) {
               setError(
-                t(
-                  "Izvēlies nākotnes datumu.",
-                  "Выберите будущую дату.",
-                  "Choose a future date.",
-                ),
+                result.error === "date"
+                  ? t(
+                      "Izvēlies nākotnes datumu.",
+                      "Выберите будущую дату.",
+                      "Choose a future date.",
+                    )
+                  : result.error === "conflict"
+                    ? t(
+                        "Šis demo laiks jau rezervēts. Izvēlies citu.",
+                        "Это демо-время уже занято. Выберите другое.",
+                        "This demo slot is already reserved. Choose another time.",
+                      )
+                    : t(
+                        "Studijas demo krājumi nav pieejami šim pušķim. Izvēlies citu.",
+                        "Демо-запас в студии для этого букета недоступен. Выберите другой.",
+                        "No demo studio stock for this bouquet. Choose another.",
+                      ),
               );
               return;
             }
-            if (
-              conflict(
-                s.reservations.filter((r) => r.status === "reserved"),
-                date,
-                time,
-                method,
-              )
-            ) {
-              setError(
-                t(
-                  "Šis demo laiks jau rezervēts. Izvēlies citu.",
-                  "Это демо-время уже занято. Выберите другое.",
-                  "This demo slot is already reserved. Choose another time.",
-                ),
-              );
-              return;
-            }
-            const code = pickupCode();
-            set((o) => ({
-              ...o,
-              reservations: [
-                ...o.reservations,
-                {
-                  id: uid(),
-                  product,
-                  date,
-                  time,
-                  method,
-                  code,
-                  status: "reserved",
-                  message: msg,
-                },
-              ],
-            }));
-            setDone(code);
+            set(result.state);
+            setDone(result.code);
           }}
         >
           <div className="panel form-panel">
@@ -467,7 +146,7 @@ function Reserve() {
                   .filter((p) => p.category < 9)
                   .map((p) => (
                     <option key={p.id} value={p.id}>
-                      {pick(p.name, s.lang)} · {money(p.price)}
+                      {pick(p.name, s.lang)} · {money(p.price, s.lang)}
                     </option>
                   ))}
               </select>
@@ -537,7 +216,9 @@ function Reserve() {
           <aside className="panel reservation-preview">
             <img src={img(p.photo)} alt={pick(p.name, s.lang)} />
             <h2>{pick(p.name, s.lang)}</h2>
-            <strong>{money(p.price + (method === "delivery" ? 5 : 0))}</strong>
+            <strong>
+              {money(p.price + (method === "delivery" ? 5 : 0), s.lang)}
+            </strong>
             <p>
               {date} · {time}
             </p>
@@ -623,7 +304,7 @@ function Customize() {
           onSubmit={(e) => {
             e.preventDefault();
             const note = `${pick(colors[color], s.lang)} · ${wrap} · ${size === 25 ? "S" : size === 35 ? "M" : "L"} · ${date} · ${method} · ${msg}${card ? t(" · kartīte", " · открытка", " · greeting card") : ""}${gift ? t(" · dāvana", " · подарок", " · gift") : ""}`;
-            add("fp-19", 1, note, price);
+            if (!add("fp-19", 1, note, price)) return;
             toast(
               t(
                 "Tavs pušķis pievienots grozam",
@@ -643,7 +324,7 @@ function Customize() {
                 onClick={() => setSize(v)}
               >
                 {["S", "M", "L"][i]}
-                <small>{money(v)}</small>
+                <small>{money(v, s.lang)}</small>
               </button>
             ))}
           </div>
@@ -785,7 +466,7 @@ function Customize() {
             <span>
               {t("Aptuvenā cena", "Примерная цена", "Estimated price")}
             </span>
-            <b>{money(price)}</b>
+            <b>{money(price, s.lang)}</b>
           </div>
           <button className="btn full">
             {t(
@@ -803,12 +484,17 @@ function Customize() {
 function Subscriptions() {
   const { s, set, toast } = useStore();
   const t = useT();
+  const [subParams] = useSearchParams();
+  const [audience, setAudience] = useState<"home" | "corporate">(
+    subParams.has("corporate") ? "corporate" : "home",
+  );
+  const [quantity, setQuantity] = useState(1);
   const [freq, setFreq] = useState("monthly");
   const [months, setMonths] = useState(3);
   const [method, setMethod] = useState("pickup");
   const [pref, setPref] = useState("seasonal");
   const price =
-    (freq === "weekly" ? 4 : freq === "biweekly" ? 2 : 1) * 28 +
+    (freq === "weekly" ? 4 : freq === "biweekly" ? 2 : 1) * 28 * quantity +
     (method === "delivery"
       ? freq === "weekly"
         ? 20
@@ -882,7 +568,7 @@ function Subscriptions() {
             <span className="eyebrow">{p.sub}</span>
             <h2>{p.title}</h2>
             <strong>
-              {money(p.price)}
+              {money(p.price, s.lang)}
               <small> / {t("mēnesī", "месяц", "month")}</small>
             </strong>
             <p>
@@ -913,6 +599,8 @@ function Subscriptions() {
                 {
                   id: uid(),
                   frequency: freq,
+                  audience,
+                  quantity,
                   months,
                   price,
                   method,
@@ -933,6 +621,34 @@ function Subscriptions() {
             {t("Tieši tev piemērots", "Именно для вас", "Make it your own")}
           </h2>
           <div className="form-grid">
+            <label>
+              {t("Abonements", "Подписка", "Plan for")}
+              <select
+                value={audience}
+                onChange={(e) =>
+                  setAudience(e.target.value as "home" | "corporate")
+                }
+              >
+                <option value="home">{t("Mājām", "Для дома", "Home")}</option>
+                <option value="corporate">
+                  {t("Uzņēmumam", "Для бизнеса", "Corporate")}
+                </option>
+              </select>
+            </label>
+            <label>
+              {t("Pušķi vienā reizē", "Букетов за раз", "Bouquets per visit")}
+              <input
+                type="number"
+                min="1"
+                max="4"
+                value={quantity}
+                onChange={(e) =>
+                  setQuantity(
+                    Math.max(1, Math.min(4, Number(e.target.value) || 1)),
+                  )
+                }
+              />
+            </label>
             <label>
               {t("Ilgums", "Срок", "Duration")}
               <select
@@ -1011,11 +727,12 @@ function Subscriptions() {
             )}
           </span>
           <h2>
-            {money(price)} <small>/ {t("mēnesī", "месяц", "month")}</small>
+            {money(price, s.lang)}{" "}
+            <small>/ {t("mēnesī", "месяц", "month")}</small>
           </h2>
           <p>
             {months} {t("mēneši", "месяцев", "months")} ·{" "}
-            {money(price * months)}
+            {money(price * months, s.lang)}
           </p>
           <p>
             {t(
@@ -1131,7 +848,7 @@ function Gifts() {
                 "DIGITAL GIFT CERTIFICATE · DEMO",
               )}
             </small>
-            <strong>{money(amount)}</strong>
+            <strong>{money(amount, s.lang)}</strong>
             <p>
               {msg ||
                 t(
@@ -1191,7 +908,7 @@ function Gifts() {
             >
               {[25, 50, 75, 100].map((x) => (
                 <option key={x} value={x}>
-                  {money(x)}
+                  {money(x, s.lang)}
                 </option>
               ))}
             </select>

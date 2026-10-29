@@ -96,7 +96,7 @@
   border-color: transparent;
 }
 .product-card .product-photo > .icon-btn.active {
-  color: #873b4b;
+  color: var(--image-action-active);
 }
 .product-card .product-photo > .icon-btn svg {
   width: 19px;
@@ -225,7 +225,7 @@ html[data-theme-tone="dark"]
   color: var(--ink);
 }
 html[data-theme-tone="dark"] dialog::backdrop {
-  background: #0b1715c9;
+  background: var(--dialog-backdrop);
 }
 .section-heading h2,
 .christmas-hero h1 {
@@ -297,7 +297,8 @@ html[data-theme-tone="dark"] dialog::backdrop {
   .comparison-dock {
     bottom: calc(var(--mobile-bottom-clearance) + 12px);
   }
-  .toast {
+  .toast,
+  .pwa-notice {
     bottom: calc(var(--mobile-bottom-clearance) + 12px);
   }
   body:has(dialog[open]) .mobile-bottom-nav {

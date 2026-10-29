@@ -284,6 +284,8 @@ export function themeTokens(theme: VisualTheme, dark = false): CSSProperties {
     "--hero-shade-soft": "#14271b50",
     "--image-action-bg": "#fffaf0",
     "--image-action-ink": "#344b3c",
+    "--image-action-active": "#873b4b",
+    "--dialog-backdrop": "#0b1715c9",
     "--mobile-nav-height": "72px",
   } as CSSProperties;
 }

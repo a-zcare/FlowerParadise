@@ -25,6 +25,7 @@ for (const zone of ["Europe/Riga", "America/New_York", "Asia/Tokyo"])
     const context = await browser.newContext({ timezoneId: zone });
     const page = await context.newPage();
     await page.clock.install({ time: new Date("2026-12-23T21:59:57Z") });
+    await page.clock.pauseAt(new Date("2026-12-23T21:59:57Z"));
     await page.addInitScript(
       ({ key, state }) => localStorage.setItem(key, JSON.stringify(state)),
       { key: STORAGE_KEY, state: { lang: "en" } },
@@ -227,13 +228,29 @@ for (const width of [390, 1440])
               ),
             ),
           );
+        await page.evaluate(() =>
+          window.scrollTo(
+            0,
+            document
+              .querySelector(".holiday-countdown")!
+              .getBoundingClientRect().top +
+              scrollY -
+              24,
+          ),
+        );
         await page.screenshot({
           path: `qa/screenshots/refined-countdown-cards-${width}.png`,
         });
       }
-      for (const route of ["/gift-studio", "/cart", "/admin?view=commerce"]) {
+      for (const [route, title] of [
+        ["/gift-studio", "Gift Builder 2.0"],
+        ["/cart", "Your bag of lovely things"],
+        ["/admin?view=commerce", "Christmas operations"],
+      ]) {
         await page.goto(`./#${route}`);
-        await expect(page.locator("h1")).toBeVisible();
+        await expect(
+          page.getByRole("heading", { name: title, exact: true }),
+        ).toBeVisible();
         await expect
           .poll(() =>
             page.evaluate(

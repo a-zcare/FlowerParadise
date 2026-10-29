@@ -1,3 +1,4 @@
+import { countdownPreset, validCampaignTarget } from "./countdown";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -1458,7 +1459,12 @@ export default function CommerceAdmin() {
             label={t("Laika atskaite", "Обратный отсчёт", "Countdown target")}
             value={s.commerce.countdown}
             onChange={(v) =>
-              patch({ countdown: v as "christmas" | "new-year" })
+              patch({
+                countdown: v as "christmas" | "new-year",
+                countdownSettings: countdownPreset(
+                  v as "christmas" | "new-year",
+                ),
+              })
             }
             choices={[
               {
@@ -1471,6 +1477,78 @@ export default function CommerceAdmin() {
               },
             ]}
           />
+          <label>
+            {t(
+              "Mērķa datums un laiks · Europe/Riga",
+              "Дата и время · Europe/Riga",
+              "Target date and time · Europe/Riga",
+            )}
+            <input
+              type="datetime-local"
+              min="2026-10-01T00:00"
+              max="2027-01-02T23:59"
+              defaultValue={s.commerce.countdownSettings.targetLocal}
+              key={s.commerce.countdownSettings.targetLocal}
+              onBlur={(e) => {
+                if (validCampaignTarget(e.target.value)) {
+                  e.target.setCustomValidity("");
+                  patch({
+                    countdownSettings: {
+                      ...s.commerce.countdownSettings,
+                      targetLocal: e.target.value,
+                    },
+                  });
+                } else {
+                  e.target.setCustomValidity(
+                    t(
+                      "Izvēlies derīgu kampaņas datumu.",
+                      "Выберите допустимую дату кампании.",
+                      "Choose a valid campaign date.",
+                    ),
+                  );
+                  e.target.reportValidity();
+                }
+              }}
+              onInput={(e) => e.currentTarget.setCustomValidity("")}
+            />
+          </label>
+          <p>
+            {t(
+              "Laiks tiek interpretēts Rīgas laika joslā. Pēc termiņa redzams sveiciens.",
+              "Время указано по Риге. По истечении срока показывается поздравление.",
+              "Time is interpreted in Riga. After expiry, the greeting is displayed.",
+            )}
+          </p>
+          {(["label", "greeting"] as const).map((field) =>
+            ["lv", "ru", "en"].map((lang, i) => (
+              <label key={field + lang}>
+                {field === "label"
+                  ? t("Notikuma nosaukums", "Название события", "Event label")
+                  : t(
+                      "Svētku sveiciens",
+                      "Поздравление",
+                      "Holiday greeting",
+                    )}{" "}
+                · {lang}
+                <input
+                  maxLength={field === "label" ? 100 : 160}
+                  defaultValue={s.commerce.countdownSettings[field][i]}
+                  key={s.commerce.countdownSettings[field][i]}
+                  onBlur={(e) => {
+                    if (e.target.value.trim())
+                      patch({
+                        countdownSettings: {
+                          ...s.commerce.countdownSettings,
+                          [field]: s.commerce.countdownSettings[field].map(
+                            (v, j) => (j === i ? e.target.value.trim() : v),
+                          ) as Text,
+                        },
+                      });
+                  }}
+                />
+              </label>
+            )),
+          )}
           <Link to="/admin?view=christmas">
             {t(
               "Kampaņas datumi, sadaļas un piedāvājumi",

@@ -274,5 +274,16 @@ export function themeTokens(theme: VisualTheme, dark = false): CSSProperties {
     "--theme-heading": theme.heading,
     "--theme-radius": theme.radius,
     "--shadow": theme.shadow,
+    "--festive-bg": night || theme.dark ? "#263b32" : "#283f33",
+    "--festive-ink": "#fff5e5",
+    "--festive-muted": "#dfd4be",
+    "--festive-accent": "#d9be8b",
+    "--festive-line": "#b59d7059",
+    "--hero-bg": "#183329",
+    "--hero-shade": "#12251ed9",
+    "--hero-shade-soft": "#14271b50",
+    "--image-action-bg": "#fffaf0",
+    "--image-action-ink": "#344b3c",
+    "--mobile-nav-height": "72px",
   } as CSSProperties;
 }

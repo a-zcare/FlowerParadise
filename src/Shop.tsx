@@ -554,7 +554,7 @@ function ProductDetail() {
     </div>
   );
 }
-function ProductContent({
+export function ProductContent({
   p,
   compact = false,
 }: {

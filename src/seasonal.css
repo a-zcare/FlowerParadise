@@ -2,8 +2,8 @@
   position: relative;
   min-height: 650px;
   height: min(780px, 82vh);
-  background: #183329;
-  color: #fff6e7;
+  background: var(--hero-bg);
+  color: var(--festive-ink);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -19,7 +19,12 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #12251ec4, #14271b50 48%, transparent 75%);
+  background: linear-gradient(
+    90deg,
+    var(--hero-shade),
+    var(--hero-shade-soft) 48%,
+    transparent 75%
+  );
   pointer-events: none;
 }
 .christmas-hero-copy {
@@ -30,7 +35,7 @@
   width: 58%;
 }
 .christmas-hero-copy .eyebrow {
-  color: #e2cdab !important;
+  color: var(--festive-accent) !important;
   font-size: 10px;
   letter-spacing: 3px;
 }
@@ -43,21 +48,21 @@
 .christmas-hero h1 em {
   display: block;
   font-weight: 400;
-  color: #e3cbb2;
+  color: var(--festive-muted);
 }
 .christmas-hero-copy p {
   font-size: 13px;
   line-height: 1.9;
   max-width: 390px;
   margin: 25px 0 32px;
-  color: #f7eee0;
+  color: var(--festive-ink);
 }
 .christmas-hero-copy > small {
   display: block;
   margin-top: 30px;
   max-width: 360px;
   font-size: 10px;
-  color: #eadfcb;
+  color: var(--festive-muted);
 }
 .christmas-secondary {
   font-size: 11px;
@@ -66,7 +71,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 0;
-  color: #fff5e6;
+  color: var(--festive-ink);
 }
 .holiday-edition {
   position: absolute;
@@ -76,34 +81,13 @@
   font-size: 8px;
   letter-spacing: 2px;
   text-align: center;
-  color: #fff7e9;
+  color: var(--festive-ink);
 }
 .holiday-edition span {
   font-family: var(--theme-heading, "Cormorant Garamond");
   font-style: italic;
   font-size: 28px;
   letter-spacing: 0;
-}
-.holiday-countdown {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  background: var(--sage);
-  border-bottom: 1px solid var(--line);
-  padding: 24px;
-  font-size: 11px;
-}
-.holiday-countdown strong {
-  font-size: 30px;
-  font-family: var(--theme-heading, "Cormorant Garamond");
-  line-height: 1;
-}
-.holiday-countdown small {
-  margin-left: 20px;
-  font-size: 9px;
-  letter-spacing: 1px;
 }
 .holiday-product-grid {
   display: grid;
@@ -608,20 +592,6 @@
   }
   .christmas-hero .btn {
     padding: 14px 18px;
-  }
-  .holiday-countdown {
-    gap: 9px;
-    padding: 20px;
-    font-size: 10px;
-  }
-  .holiday-countdown > span {
-    flex-basis: 75%;
-    max-width: 200px;
-  }
-  .holiday-countdown small {
-    flex-basis: 100%;
-    margin-left: 0;
-    text-align: center;
   }
   .holiday-product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

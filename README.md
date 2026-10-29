@@ -81,3 +81,25 @@ Admin → Christmas operations includes translated product editing, creation fro
 Privacy and production boundaries: wishlist share URLs contain a bounded snapshot of product IDs and a generic title, not synchronized user state. Use fictional corporate contact details at example.com/org/net. Food, cosmetic, candle and decorative-toy contents are concepts requiring supplier/safety verification. Local order photo uploads live only in memory; a stock photo is never labeled as a prepared order. Slots use Europe/Riga dates and are not delivery promises. There are no real payments, authentication, business submissions, external AI, messages or analytics services. Material costs and corporate quotes are demo assumptions, not commercial offers. Product status is internal planning, separate from inventory readiness.
 
 Browser coverage captures representative 390px and 1440px screenshots as a separate CI artifact, and exercises commerce layouts at 320, 375, 390, 430, 768, 1024, 1280, 1440 and 1920px. Deploy remains through the existing GitHub Pages workflow after an authorized merge to main; a pull request run only validates and packages.
+
+### Countdown and visual refinement (October 2026)
+
+The seasonal homepage uses a shared four-unit countdown (`HolidayCountdown.tsx`)
+with tabular numerals, a one-second clock, visibility/pageshow resynchronization,
+and complete cleanup on unmount. The default target is **24 December 2026,
+00:00 Europe/Riga** (23 December, 22:00 UTC), independent of visitor timezone.
+`countdown.ts` resolves local wall-clock times using IANA timezone rules and
+rejects skipped/ambiguous DST times and invalid calendar dates. Expiration
+shows the configured greeting; it does not change holiday automatically.
+Christmas operations → Campaign lets the demo admin choose a Christmas/New Year
+preset or a date within the current 2026/2027 campaign, and edit all three
+localized event labels and greetings. Existing saved milestone settings migrate.
+
+`refinements.css` provides semantic seasonal surfaces, grouped countdown units,
+readable product metadata and 44px card actions, mobile safe-area clearance,
+and dialog-aware bottom navigation. Quick view reuses the existing product
+editor through a lazy import. Original colors and all 14 additional palettes
+remain available. Responsive regression coverage includes the nine requested
+widths, Riga/New York/Tokyo clocks, configurable expiration, all 15 themes and
+390px/1440px screenshots in the existing CI screenshot artifact. Everything
+continues to be a browser-local demo; no live commerce integrations were added.

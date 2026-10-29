@@ -60,7 +60,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     root.dataset.visualTheme = current.id;
     root.dataset.themeDetail = current.detail;
-    root.dataset.themeTone = current.dark ? "dark" : "light";
+    root.dataset.themeTone = current.dark || s.dark ? "dark" : "light";
     for (const [k, v] of Object.entries(themeTokens(current, s.dark)))
       root.style.setProperty(k, String(v));
     root.style.colorScheme = current.dark || s.dark ? "dark" : "light";
@@ -73,7 +73,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           ...state,
           tokens: themeTokens(current, s.dark),
           detail: current.detail,
-          tone: current.dark ? "dark" : "light",
+          tone: current.dark || s.dark ? "dark" : "light",
           dark: s.dark,
         }),
       );

@@ -183,7 +183,7 @@ export function MobileNavigation() {
           {
             url: "/available",
             icon: <Clock3 size={20} />,
-            label: t("Tagad", "Сейчас", "Ready now"),
+            label: t("Pieejams", "В наличии", "Ready now"),
           },
           {
             url: "/cart",
@@ -193,7 +193,7 @@ export function MobileNavigation() {
           {
             url: "/discover",
             icon: <Compass size={20} />,
-            label: t("Atklāj", "Открыть", "Discover"),
+            label: t("Atklāj", "Обзор", "Explore"),
           },
         ].map((x) => (
           <Link

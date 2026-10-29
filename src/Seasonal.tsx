@@ -1,3 +1,4 @@
+import { HolidayCountdown } from "./HolidayCountdown";
 import {
   ArrowDown,
   ArrowRight,
@@ -11,7 +12,7 @@ import {
   Sparkles,
   TreePine,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { money, pick, type Product } from "./data";
 import { dateKey, id } from "./domain";
@@ -73,46 +74,6 @@ export function SeasonalHome({ original }: { original: React.ReactNode }) {
     </>
   ) : (
     <>{original}</>
-  );
-}
-function HolidayCountdown() {
-  const t = useT();
-  const { s } = useStore();
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60000);
-    return () => clearInterval(timer);
-  }, []);
-  const target =
-    s.commerce.countdown !== "new-year" &&
-    now < Date.parse("2026-12-25T00:00:00+02:00")
-      ? "2026-12-25T00:00:00+02:00"
-      : "2027-01-01T00:00:00+02:00";
-  const diff = Math.max(0, Date.parse(target) - now);
-  return (
-    <div className="holiday-countdown">
-      <Sparkles size={19} />
-      <span>
-        {target.startsWith("2026")
-          ? t(
-              "Līdz Ziemassvētku rītam",
-              "До рождественского утра",
-              "Until Christmas morning",
-            )
-          : t("Līdz Jaunajam gadam", "До Нового года", "Until the New Year")}
-      </span>
-      <strong>{Math.floor(diff / 86400000)}</strong>
-      {t("dienas", "дней", "days")}
-      <strong>{Math.floor(diff / 3600000) % 24}</strong>
-      {t("stundas", "часов", "hours")}
-      <small>
-        {t(
-          "2026 / 2027 · Ideju kolekcija",
-          "2026 / 2027 · Коллекция идей",
-          "2026 / 2027 · An inspiration collection",
-        )}
-      </small>
-    </div>
   );
 }
 function ChristmasHome() {

@@ -1,3 +1,4 @@
+import { countdownPreset, validCampaignTarget } from "./countdown";
 import type { Product, Text } from "./data";
 import type {
   CommerceState,
@@ -381,6 +382,7 @@ export function commerceDefaults(): CommerceState {
       "Christmas 2026 · New Year 2027",
     ],
     countdown: "christmas",
+    countdownSettings: countdownPreset(),
   };
 }
 export function validProduct(p: unknown): p is Product {
@@ -559,7 +561,25 @@ export function migrateCommerce(raw: unknown): CommerceState {
       )
         d.orderStages[k] = String(v);
   if (triple(raw.banner)) d.banner = raw.banner;
-  if (raw.countdown === "new-year") d.countdown = "new-year";
+  if (raw.countdown === "new-year") {
+    d.countdown = "new-year";
+    d.countdownSettings = countdownPreset("new-year");
+  }
+  if (object(raw.countdownSettings)) {
+    const c = raw.countdownSettings;
+    if (text(c.targetLocal, 16) && validCampaignTarget(c.targetLocal))
+      d.countdownSettings.targetLocal = c.targetLocal;
+    if (
+      triple(c.label) &&
+      c.label.every((x) => x.trim().length > 0 && x.length <= 100)
+    )
+      d.countdownSettings.label = c.label;
+    if (
+      triple(c.greeting) &&
+      c.greeting.every((x) => x.trim().length > 0 && x.length <= 160)
+    )
+      d.countdownSettings.greeting = c.greeting;
+  }
   return d;
 }
 export function materialRequirements(p: Product, design?: DesignConfig) {

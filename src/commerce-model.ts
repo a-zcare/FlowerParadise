@@ -1,3 +1,4 @@
+import type { CountdownSettings } from "./countdown";
 import type { Product, Text } from "./data";
 export type Lifecycle =
   | "concept"
@@ -99,4 +100,5 @@ export interface CommerceState {
   orderStages: Record<string, string>;
   banner: Text;
   countdown: "christmas" | "new-year";
+  countdownSettings: CountdownSettings;
 }

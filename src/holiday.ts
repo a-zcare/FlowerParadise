@@ -169,13 +169,19 @@ export const holidayProducts: Product[] = records.map(({ name, group }, i) => {
   );
   const detail: SeasonalDetails = {
     campaign: "christmas-2026",
-    preparationDays: [0, 1, 3, 6].includes(group) ? 2 : group === 7 ? 4 : 1,
-    readiness:
+    preparationDays:
       group === 7
-        ? "made-to-order"
+        ? 4
         : [2, 5, 6].includes(group)
-          ? "same-day"
-          : "next-day",
+          ? 0
+          : [3, 4].includes(group)
+            ? 1
+            : 2,
+    readiness: [2, 5, 6].includes(group)
+      ? "same-day"
+      : [3, 4].includes(group)
+        ? "next-day"
+        : "made-to-order",
     natural: [0, 1, 3, 6].includes(group),
     indoor: true,
     materials: materials[group],

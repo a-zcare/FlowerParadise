@@ -399,3 +399,14 @@ describe("material units and final cart guards", () => {
     expect(appendCart(s, [{ id: "xm-111", qty: 1, options }])).toBeNull();
   });
 });
+
+it("keeps preparation estimates consistent with quick-gift readiness concepts", () => {
+  for (const p of products.filter((p) => p.seasonal)) {
+    if (p.seasonal!.readiness === "same-day")
+      expect(p.seasonal!.preparationDays).toBe(0);
+    if (p.seasonal!.readiness === "next-day")
+      expect(p.seasonal!.preparationDays).toBe(1);
+    if (p.seasonal!.readiness === "made-to-order")
+      expect(p.seasonal!.preparationDays).toBeGreaterThanOrEqual(2);
+  }
+});

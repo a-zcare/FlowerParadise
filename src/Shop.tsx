@@ -540,7 +540,10 @@ function ProductDetail() {
             .filter(
               (x) =>
                 x.id !== p.id &&
-                (x.category === p.category || x.color === p.color),
+                (p.seasonal
+                  ? p.seasonal.related.includes(x.id) ||
+                    x.category === p.category
+                  : x.category === p.category || x.color === p.color),
             )
             .slice(0, 4)
             .map((x) => (

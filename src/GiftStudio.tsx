@@ -72,7 +72,8 @@ export default function GiftStudio() {
     (p) =>
       p.seasonal &&
       isVisible(p, s.commerce) &&
-      (!filter || String(p.category) === filter),
+      (!filter || String(p.category) === filter) &&
+      (lines.some((l) => l.id === p.id) || p.price <= c.budget),
   );
   const labels = [
     t("Saņēmējs", "Получатель", "Recipient"),
@@ -166,12 +167,10 @@ export default function GiftStudio() {
                 onChange={setFilter}
                 choices={[
                   { id: "", label: t("Visas", "Все", "All") },
-                  ...categories
-                    .slice(12, 21)
-                    .map((v, i) => ({
-                      id: String(i + 12),
-                      label: pick(v, s.lang),
-                    })),
+                  ...categories.slice(12, 21).map((v, i) => ({
+                    id: String(i + 12),
+                    label: pick(v, s.lang),
+                  })),
                 ]}
               />
               <div className="component-grid">

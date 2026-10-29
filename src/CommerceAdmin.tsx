@@ -14,6 +14,8 @@ import {
   defaultDesign,
   lifecycle,
   materialCost,
+  materialRequirements,
+  materialLabels,
   christmasDates,
   validProduct,
 } from "./commerce";
@@ -62,6 +64,8 @@ export default function CommerceAdmin() {
     "See public/seasonal/image-credits.json",
   );
   const [materialProduct, setMaterialProduct] = useState("xm-001");
+  const [costDraft, setCostDraft] = useState("");
+  const costConfiguration = s.commerce.drafts[costDraft];
   const p = s.catalog.find((p) => p.id === id) || s.catalog[0];
   const visible = s.catalog.filter((p) =>
     `${p.id} ${pick(p.name, s.lang)}`
@@ -1068,6 +1072,69 @@ export default function CommerceAdmin() {
               />
             </label>
           ))}
+          <h3>
+            {t(
+              "Simulētie materiālu daudzumi",
+              "Условные количества материалов",
+              "Simulated material quantities",
+            )}
+          </h3>
+          <p className="muted">
+            {t(
+              "Sākuma daudzumi ir nulle. Tie nav faktiski krājumi.",
+              "Начальные количества равны нулю. Это не фактические остатки.",
+              "Quantities start at zero. These are not physical stock counts.",
+            )}
+          </p>
+          {Object.keys(s.commerce.materialStock).map((key) => (
+            <label key={key}>
+              {pick(materialLabels[key], s.lang)} ·{" "}
+              {t("Demo vienības", "Демо-единицы", "Demo units")}
+              <input
+                type="number"
+                min={0}
+                max={10000}
+                value={s.commerce.materialStock[key]}
+                onChange={(e) =>
+                  patch({
+                    materialStock: {
+                      ...s.commerce.materialStock,
+                      [key]: Math.max(
+                        0,
+                        Math.min(
+                          10000,
+                          Math.floor(Number(e.target.value) || 0),
+                        ),
+                      ),
+                    },
+                  })
+                }
+              />
+            </label>
+          ))}
+          <Select
+            label={t(
+              "Konfigurācijas melnraksts",
+              "Черновик конфигурации",
+              "Configuration draft",
+            )}
+            value={costDraft}
+            onChange={setCostDraft}
+            choices={[
+              {
+                id: "",
+                label: t(
+                  "Tikai bāzes produkts",
+                  "Только базовый товар",
+                  "Base product only",
+                ),
+              },
+              ...Object.keys(s.commerce.drafts).map((id) => ({
+                id,
+                label: id,
+              })),
+            ]}
+          />
           <Select
             label={t(
               "Aprēķina produkts",
@@ -1092,17 +1159,41 @@ export default function CommerceAdmin() {
               materialCost(
                 s.catalog.find((p) => p.id === materialProduct)!,
                 s.commerce.materialPrices,
-                defaultDesign(),
+                costConfiguration,
               ),
               s.lang,
             )}
           </p>
+          <div className="material-requirements">
+            {Object.entries(
+              materialRequirements(
+                s.catalog.find((p) => p.id === materialProduct)!,
+                costConfiguration,
+              ),
+            ).map(([key, qty]) => (
+              <p
+                key={key}
+                className={
+                  (s.commerce.materialStock[key] || 0) < qty ? "error" : ""
+                }
+              >
+                {pick(materialLabels[key] || [key, key, key], s.lang)}: {qty} /{" "}
+                {s.commerce.materialStock[key] || 0} ·{" "}
+                {t(
+                  "vajag / demo krājums",
+                  "нужно / демо-запас",
+                  "required / demo stock",
+                )}
+              </p>
+            ))}
+          </div>
           <button
             className="btn"
             onClick={() => {
               const cost = materialCost(
                 s.catalog.find((p) => p.id === materialProduct)!,
                 s.commerce.materialPrices,
+                costConfiguration,
               );
               set((o) => ({
                 ...o,

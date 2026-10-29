@@ -9,6 +9,7 @@ import {
   designPrice,
   isVisible,
   materialCost,
+  materialRequirements,
   migrateCommerce,
   readSharedWishlist,
   recommendChristmas,
@@ -365,5 +366,36 @@ describe("safe CSV and admin persistence", () => {
       migrateCommerce({ materialPrices: { greenery: -5 } }).materialPrices
         .greenery,
     ).toBe(8);
+  });
+});
+
+describe("material units and final cart guards", () => {
+  it("tracks real component quantities in a configured calendar estimate", () => {
+    const p = products.find((p) => p.id === "xm-111")!;
+    const d = defaultDesign("calendar");
+    d.days = Array.from({ length: 24 }, () => ({
+      content: "tea",
+      message: "",
+    }));
+    expect(materialRequirements(p, d).food).toBe(24);
+    expect(materialCost(p, commerceDefaults().materialPrices, d)).toBe(
+      materialCost(p, commerceDefaults().materialPrices) + 72,
+    );
+    const m = migrateCommerce({ materialStock: { food: 24, wood: -1 } });
+    expect(m.materialStock.food).toBe(24);
+    expect(m.materialStock.wood).toBe(0);
+  });
+  it("never adds an incomplete calendar even when another UI calls the shared cart directly", () => {
+    const s = initialState();
+    const options = {
+      size: "M" as const,
+      color: 3,
+      wrapping: "kraft" as const,
+      card: false,
+      extraGift: false,
+      method: "pickup" as const,
+      configuration: defaultDesign("calendar"),
+    };
+    expect(appendCart(s, [{ id: "xm-111", qty: 1, options }])).toBeNull();
   });
 });

@@ -26,6 +26,7 @@ export interface WreathConfig {
   candles: number;
   decorations: number[];
   color: number;
+  accentColor?: number;
 }
 export interface CalendarDay {
   content: string;
@@ -93,6 +94,7 @@ export interface CommerceState {
     closed: string[];
   };
   materialPrices: Record<string, number>;
+  materialStock: Record<string, number>;
   events: { kind: string; product: string; date: string }[];
   orderStages: Record<string, string>;
   banner: Text;

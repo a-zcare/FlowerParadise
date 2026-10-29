@@ -224,7 +224,9 @@ test("preorders honor configured capacity and prevent duplicate reservations", a
   await page
     .getByRole("button", { name: "Reserve demo slot", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("Demo code");
+  await expect(
+    page.getByRole("status").filter({ hasText: "Demo code" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Reserve demo slot", exact: true }),
   ).toBeDisabled();
@@ -315,6 +317,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1280, 1440, 1920])
   });
 for (const width of [390, 1440])
   test(`representative screenshots ${width}px`, async ({ page }) => {
+    test.setTimeout(120000);
     await mkdir("qa/screenshots", { recursive: true });
     await page.setViewportSize({ width, height: 1000 });
     for (const [path, name] of [
@@ -330,9 +333,31 @@ for (const width of [390, 1440])
           .getByRole("checkbox", { name: /Add custom packaging/ })
           .check();
       await expect(page.locator("main h1").first()).toBeVisible();
+      await page.locator("main img").evaluateAll(async (images) => {
+        await Promise.all(
+          images.map(async (image) => {
+            const img = image as HTMLImageElement;
+            img.loading = "eager";
+            try {
+              await img.decode();
+            } catch {
+              /* Fall back to the app's own image handling. */
+            }
+          }),
+        );
+      });
+      await page.evaluate(() => document.fonts.ready.then(() => true));
       await page.screenshot({
         path: `qa/screenshots/${name}-${width}.png`,
         fullPage: true,
       });
+      if (path === "/" || path === "/wrapping-studio") {
+        if (path === "/wrapping-studio")
+          await page.locator(".wrapping-preview").scrollIntoViewIfNeeded();
+        await page.screenshot({
+          path: `qa/screenshots/${name}-${width}-viewport.png`,
+          fullPage: false,
+        });
+      }
     }
   });

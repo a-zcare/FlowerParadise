@@ -34,7 +34,32 @@ export const lifecycle: { id: Lifecycle; label: Text }[] = [
   },
   { id: "archived", label: ["Arhivēts", "Архивирован", "Archived"] },
 ];
+export const materialLabels: Record<string, Text> = {
+  greenery: ["Skujas", "Хвоя", "Greenery"],
+  wax: ["Sveces", "Свечи", "Candles"],
+  ribbon: ["Lentes", "Ленты", "Ribbons"],
+  box: ["Kastes", "Коробки", "Boxes"],
+  ornament: ["Dekori", "Украшения", "Ornaments"],
+  packaging: ["Iepakojums", "Упаковка", "Packaging"],
+  food: ["Dāvanu saturs", "Подарочное наполнение", "Gift contents"],
+  textile: ["Tekstils", "Текстиль", "Textile"],
+  wood: ["Koks", "Дерево", "Wood"],
+  paper: ["Papīrs", "Бумага", "Paper"],
+  metal: ["Metāls", "Металл", "Metal"],
+  glass: ["Stikls", "Стекло", "Glass"],
+};
 export const giftComponents = [
+  {
+    id: "plush",
+    name: [
+      "Plīša dekora rotaļlieta",
+      "Плюшевая декоративная игрушка",
+      "Plush decorative toy",
+    ] as Text,
+    price: 12,
+    material: "textile",
+    fits: ["large"],
+  },
   {
     id: "candle",
     name: [
@@ -291,6 +316,10 @@ export function validDesign(x: unknown): x is DesignConfig {
       !Number.isInteger(w.candles) ||
       Number(w.candles) < 0 ||
       Number(w.candles) > 3 ||
+      (w.accentColor !== undefined &&
+        (!Number.isInteger(w.accentColor) ||
+          Number(w.accentColor) < 0 ||
+          Number(w.accentColor) > 5)) ||
       !Number.isInteger(w.color) ||
       Number(w.color) < 0 ||
       Number(w.color) > 5 ||
@@ -329,6 +358,20 @@ export function commerceDefaults(): CommerceState {
       paper: 1,
       metal: 2,
       glass: 2,
+    },
+    materialStock: {
+      greenery: 0,
+      wax: 0,
+      ribbon: 0,
+      box: 0,
+      ornament: 0,
+      packaging: 0,
+      food: 0,
+      textile: 0,
+      wood: 0,
+      paper: 0,
+      metal: 0,
+      glass: 0,
     },
     events: [],
     orderStages: {},
@@ -441,6 +484,16 @@ export function migrateCommerce(raw: unknown): CommerceState {
         (i) => typeof i === "string" && /^202[67]-\d{2}-\d{2}$/.test(i),
       );
   }
+  if (object(raw.materialStock))
+    for (const [k, v] of Object.entries(raw.materialStock))
+      if (
+        Object.hasOwn(d.materialStock, k) &&
+        typeof v === "number" &&
+        Number.isInteger(v) &&
+        v >= 0 &&
+        v <= 10000
+      )
+        d.materialStock[k] = v;
   if (object(raw.materialPrices))
     for (const [k, v] of Object.entries(raw.materialPrices))
       if (
@@ -509,16 +562,39 @@ export function migrateCommerce(raw: unknown): CommerceState {
   if (raw.countdown === "new-year") d.countdown = "new-year";
   return d;
 }
+export function materialRequirements(p: Product, design?: DesignConfig) {
+  const units: Record<string, number> = { packaging: 1 };
+  for (const tag of p.seasonal?.materialTags || ["greenery"])
+    units[tag] = (units[tag] || 0) + 1;
+  if (design?.wrapping) {
+    units.box = (units.box || 0) + 1;
+    units.ribbon = (units.ribbon || 0) + 1;
+    if (design.wrapping.accessories) units.ornament = (units.ornament || 0) + 1;
+  }
+  if (design?.wreath) {
+    units.ornament = (units.ornament || 0) + design.wreath.decorations.length;
+    if (design.wreath.candles < 2) units.wax = (units.wax || 0) + 4;
+  }
+  for (const x of design?.extras || []) {
+    const g = giftComponents.find((g) => g.id === x.id);
+    if (g) units[g.material] = (units[g.material] || 0) + x.qty;
+  }
+  for (const day of design?.days || []) {
+    const g = giftComponents.find((g) => g.id === day.content);
+    if (g) units[g.material] = (units[g.material] || 0) + 1;
+  }
+  return units;
+}
 export function materialCost(
   p: Product,
   c: CommerceState["materialPrices"],
   design?: DesignConfig,
 ) {
-  const tags = p.seasonal?.materialTags || ["greenery"];
   return roundMoney(
-    tags.reduce((n, t) => n + (c[t] || 0), 0) +
-      (c.packaging || 0) +
-      (design ? designPrice(design) * 0.45 : 0),
+    Object.entries(materialRequirements(p, design)).reduce(
+      (n, [tag, qty]) => n + (c[tag] || 0) * qty,
+      0,
+    ),
   );
 }
 export function isVisible(p: Product, c: CommerceState) {

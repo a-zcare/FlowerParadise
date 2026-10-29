@@ -477,6 +477,15 @@ function Atelier({ calendar }: { calendar: boolean }) {
                       label: pick(n, s.lang),
                     }))}
                   />
+                  <Select
+                    label={t("Akcenta krāsa", "Акцентный цвет", "Accent color")}
+                    value={w.accentColor ?? 4}
+                    onChange={(v) => patchW({ accentColor: Number(v) })}
+                    choices={colors.map((n, i) => ({
+                      id: i,
+                      label: pick(n, s.lang),
+                    }))}
+                  />
                 </section>
               </>
             )}
@@ -588,6 +597,14 @@ function Atelier({ calendar }: { calendar: boolean }) {
                   className={`atelier-wreath wreath-type-${w.type} greenery-${w.greenery}`}
                   style={
                     {
+                      "--accent-color": [
+                        "#a62937",
+                        "#702b3c",
+                        "#b89747",
+                        "#a2a5ad",
+                        "#f4efdd",
+                        "#987754",
+                      ][w.accentColor ?? 4],
                       "--decor-color": [
                         "#a62937",
                         "#702b3c",

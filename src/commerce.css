@@ -700,3 +700,26 @@
     margin-top: 14px;
   }
 }
+.commerce-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.commerce-summary > p {
+  margin: 0;
+}
+.commerce-summary > a {
+  display: block;
+  line-height: 1.7;
+  font-size: 12px;
+}
+.wrapping-editor input[type="color"] {
+  height: 44px;
+  padding: 4px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.atelier-wreath i:nth-of-type(even) {
+  color: var(--accent-color, var(--decor-color));
+}

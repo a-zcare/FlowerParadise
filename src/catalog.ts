@@ -1,3 +1,4 @@
+import { isVisible } from "./commerce";
 import type { DemoState } from "./models";
 import { locationMatches } from "./pickup";
 import { categories, pick, type Lang, type Product } from "./data";
@@ -25,8 +26,11 @@ export function filterCatalog(
 ) {
   return products.filter(
     (p) =>
+      (!state || isVisible(p, state.commerce)) &&
       (f.scope === "all" ||
-        (f.scope === "holiday" ? !!p.seasonal : !p.seasonal)) &&
+        (f.scope === "holiday"
+          ? (state?.commerce.productMeta[p.id]?.seasonal ?? !!p.seasonal)
+          : !(state?.commerce.productMeta[p.id]?.seasonal ?? !!p.seasonal))) &&
       (!f.query ||
         `${pick(p.name, lang)} ${pick(p.composition, lang)} ${pick(categories[p.category], lang)} ${pick(p.description, lang)}`
           .toLowerCase()

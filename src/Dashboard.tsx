@@ -1,3 +1,4 @@
+import CommerceAdmin from "./CommerceAdmin";
 import CatalogTools from "./CatalogTools";
 import UXAdmin from "./UXAdmin";
 import { SeasonalAdmin, NotificationCenter } from "./Seasonal";
@@ -931,6 +932,10 @@ function Admin() {
   const [notice, setNotice] = useState(false);
   const tabs = [
     [
+      "commerce",
+      t("Svētku operācijas", "Праздничные операции", "Christmas operations"),
+    ],
+    [
       "experience",
       t("Pieredzes studija", "Студия интерфейса", "Experience studio"),
     ],
@@ -1023,7 +1028,9 @@ function Admin() {
           )}
         />
         <Demo />
-        {tab === "catalog-tools" ? (
+        {tab === "commerce" ? (
+          <CommerceAdmin />
+        ) : tab === "catalog-tools" ? (
           <CatalogTools />
         ) : tab === "experience" ? (
           <UXAdmin />

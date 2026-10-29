@@ -23,9 +23,11 @@ test("wreath and calendar builders preserve price, name and all 24 notes after r
   await page
     .getByRole("button", { name: "Suggest ideas", exact: true })
     .click();
-  await expect(page.locator(".calendar-note-grid input")).toHaveCount(24);
+  await expect(
+    page.locator(".calendar-note-grid input:not([type=checkbox])"),
+  ).toHaveCount(24);
   await page
-    .locator(".calendar-note-grid input")
+    .locator(".calendar-note-grid input:not([type=checkbox])")
     .nth(23)
     .fill("Last Christmas message");
   await page.getByRole("button", { name: /Add concept to bag/ }).click();
@@ -138,8 +140,8 @@ for (const width of [320, 390, 768, 1024, 1440, 1920])
   test(`new flows fit at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     for (const [route, scope] of [
-      ["/wreath-builder", ".holiday-atelier"],
-      ["/advent-builder", ".holiday-atelier"],
+      ["/wreath-builder", ".commerce-page"],
+      ["/advent-builder", ".commerce-page"],
       ["/guides", ".journal"],
       ["/how-it-works", ".how-page"],
       ["/admin?view=experience", ".admin-content"],

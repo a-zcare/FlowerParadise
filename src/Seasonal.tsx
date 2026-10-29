@@ -77,12 +77,14 @@ export function SeasonalHome({ original }: { original: React.ReactNode }) {
 }
 function HolidayCountdown() {
   const t = useT();
+  const { s } = useStore();
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(timer);
   }, []);
   const target =
+    s.commerce.countdown !== "new-year" &&
     now < Date.parse("2026-12-25T00:00:00+02:00")
       ? "2026-12-25T00:00:00+02:00"
       : "2027-01-01T00:00:00+02:00";
@@ -281,6 +283,54 @@ function ChristmasHome() {
           ))}
         </div>
       </section>
+      <section className="section">
+        <span className="eyebrow">CHRISTMAS ATELIER</span>
+        <h2>
+          {t(
+            "Izveido dāvanu ar savu stāstu",
+            "Создайте подарок со своей историей",
+            "Create a gift with your own story",
+          )}
+        </h2>
+        <div className="holiday-tool-grid">
+          {[
+            [
+              "/gift-studio",
+              t(
+                "Dāvanu konstruktors 2.0",
+                "Конструктор подарков 2.0",
+                "Gift Builder 2.0",
+              ),
+            ],
+            [
+              "/wrapping-studio",
+              t("Iesaiņošanas studija", "Студия упаковки", "Wrapping Studio"),
+            ],
+            [
+              "/wreath-builder",
+              t(
+                "Tavs Adventes vainags",
+                "Ваш адвентский венок",
+                "Your Advent wreath",
+              ),
+            ],
+            [
+              "/advent-builder",
+              t(
+                "24 personiskas dāvanas",
+                "24 личных подарка",
+                "24 personal surprises",
+              ),
+            ],
+          ].map(([url, label]) => (
+            <Link key={url} to={url}>
+              <small>CREATE · PERSONALIZE · DEMO</small>
+              {label}
+              <ArrowUpRight size={20} />
+            </Link>
+          ))}
+        </div>
+      </section>
       <section className="section holiday-recipients">
         <span className="eyebrow">
           {t(
@@ -326,6 +376,41 @@ function ChristmasHome() {
           </Link>
         </div>
       </section>
+      <section className="section">
+        <div className="holiday-tool-grid">
+          {[
+            [
+              "/gift-finder",
+              t("Palīdzi man izvēlēties", "Помогите выбрать", "Help me choose"),
+            ],
+            [
+              "/christmas-collections",
+              t(
+                "Gatavas kolekcijas",
+                "Готовые коллекции",
+                "Curated collections",
+              ),
+            ],
+            [
+              "/last-minute",
+              t(
+                "Dāvana pēdējā brīdī",
+                "Подарок в последний момент",
+                "Last-minute gifts",
+              ),
+            ],
+            [
+              "/corporate-christmas",
+              t("Uzņēmumu dāvanas", "Корпоративные подарки", "Corporate gifts"),
+            ],
+          ].map(([url, label]) => (
+            <Link key={url} to={url}>
+              {label}
+              <ArrowUpRight size={20} />
+            </Link>
+          ))}
+        </div>
+      </section>
       <section className="holiday-preorder section">
         <TreePine size={35} strokeWidth={1} />
         <div>
@@ -344,7 +429,7 @@ function ChristmasHome() {
             )}
           </p>
         </div>
-        <Link className="btn" to="/reserve?holiday=1">
+        <Link className="btn" to="/christmas-preorders">
           {t("Demo iepriekšpasūtījums", "Демо-предзаказ", "Demo preorder")}
           <ArrowUpRight size={16} />
         </Link>
@@ -511,6 +596,8 @@ export function NotificationCenter() {
   const [kind, setKind] = useState<NotificationKind>("order");
   const n = s.seasonal.notifications;
   const admin = [
+    "corporateInquiry",
+    "materialShortage",
     "newOrder",
     "newLead",
     "lowStock",
@@ -833,6 +920,23 @@ export function Launch() {
                   ["day", t("Diena", "День", "Daytime")],
                   ["evening", t("Vakars", "Вечер", "Evening")],
                   ["night", t("Nakts", "Ночь", "Night")],
+                ],
+              ],
+              [
+                "giftType",
+                t(
+                  "Vēlamā dāvana",
+                  "Предпочитаемый подарок",
+                  "Preferred gift type",
+                ),
+                [
+                  ["any", t("Jebkura", "Любой", "Any")],
+                  ["decor", t("Dekors", "Декор", "Decorations")],
+                  [
+                    "box",
+                    t("Dāvanu kaste", "Подарочная коробка", "Gift boxes"),
+                  ],
+                  ["flowers", t("Ziedi", "Цветы", "Flowers")],
                 ],
               ],
               [

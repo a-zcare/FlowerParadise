@@ -1,6 +1,6 @@
 import { ChevronDown, ArrowUpRight } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
-import { categories, pick } from "./data";
+import { categories, pick, img } from "./data";
 import { useStore } from "./store";
 import { useT } from "./ui";
 export default function Navigation() {
@@ -35,6 +35,11 @@ export default function Navigation() {
         </summary>
         <div className="nav-mega">
           <div>
+            <img
+              className="mega-feature-image"
+              src={`${import.meta.env.BASE_URL}seasonal/christmas-hero-small.webp`}
+              alt=""
+            />
             <small>CHRISTMAS ATELIER · 2026</small>
             <h2>
               {t(
@@ -58,9 +63,22 @@ export default function Navigation() {
           <div className="nav-collections">
             {categories.slice(12, 20).map((cat, i) => (
               <Link to={`/christmas?category=${i + 12}`} key={i}>
+                <img
+                  src={img(s.catalog.find((p) => p.category === i + 12)!.photo)}
+                  alt=""
+                  loading="lazy"
+                />
                 {pick(cat, s.lang)}
               </Link>
             ))}
+            {[15, 25, 50].map((n) => (
+              <Link key={n} to={`/christmas?max=${n}`}>
+                {t("Līdz", "До", "Under")} €{n}
+              </Link>
+            ))}
+            <Link to="/last-minute">
+              {t("Ātrās dāvanas", "Быстрые подарки", "Last-minute gifts")}
+            </Link>
             <Link to="/advent">
               {t("Adventes kalendārs", "Адвент-календарь", "Advent calendar")}
             </Link>
@@ -88,7 +106,7 @@ export default function Navigation() {
         <div className="nav-gifts">
           {[
             [
-              "/christmas-builder",
+              "/gift-studio",
               t(
                 "Ziemassvētku dāvanu konstruktors",
                 "Конструктор рождественских подарков",
@@ -107,6 +125,27 @@ export default function Navigation() {
                 "Advent calendar builder",
               ),
             ],
+            [
+              "/wrapping-studio",
+              t("Iesaiņošanas studija", "Студия упаковки", "Wrapping Studio"),
+            ],
+            [
+              "/gift-finder",
+              t("Dāvanu meklētājs", "Подбор подарков", "Gift Finder"),
+            ],
+            [
+              "/christmas-collections",
+              t(
+                "Svētku kolekcijas",
+                "Праздничные коллекции",
+                "Christmas Collections",
+              ),
+            ],
+            [
+              "/corporate-christmas",
+              t("Uzņēmumiem", "Компаниям", "Corporate Christmas"),
+            ],
+            ["/wishlists", t("Vēlmju saraksti", "Списки желаний", "Wishlists")],
             [
               "/gifts",
               t(

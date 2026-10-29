@@ -1,3 +1,7 @@
+import ProductConfidence from "./ProductConfidence";
+import { WrappingEditor, ConfigurationSummary } from "./CommerceUI";
+import { isVisible, wrappingPrice } from "./commerce";
+import type { WrappingConfig } from "./commerce-model";
 import { PickupSelection } from "./Pickup";
 import { locationMatches, pickupLocations } from "./pickup";
 import { HolidayPersonalization } from "./SeasonalCommerce";
@@ -482,9 +486,30 @@ function FlowerNote() {
   return <span>✳</span>;
 }
 function ProductDetail() {
-  const { s } = useStore();
+  const { s, set } = useStore();
   const { id } = useParams();
   const p = s.catalog.find((x) => x.id === id);
+  useEffect(() => {
+    if (id)
+      set((o) => {
+        if (
+          o.commerce.events.at(-1)?.kind === "view" &&
+          o.commerce.events.at(-1)?.product === id &&
+          Date.now() - Date.parse(o.commerce.events.at(-1)!.date) < 1000
+        )
+          return o;
+        return {
+          ...o,
+          commerce: {
+            ...o.commerce,
+            events: [
+              ...o.commerce.events,
+              { kind: "view", product: id, date: new Date().toISOString() },
+            ].slice(-500),
+          },
+        };
+      });
+  }, [id, set]);
   const t = useT();
   if (!p)
     return (
@@ -500,6 +525,7 @@ function ProductDetail() {
         <span>{pick(p.name, s.lang)}</span>
       </div>
       <ProductContent p={p} />
+      <ProductConfidence p={p} />
       <PhotoPreview p={p} />
       <section className="section related">
         <h2>
@@ -534,6 +560,7 @@ function ProductContent({
 }) {
   const { s, set, add, toast } = useStore();
   const t = useT();
+  const [customWrapping, setCustomWrapping] = useState<WrappingConfig>();
   const [qty, setQty] = useState(1);
   const [photo, setPhoto] = useState(0);
   const [card, setCard] = useState(false);
@@ -546,6 +573,16 @@ function ProductContent({
   const [time, setTime] = useState("12:00–15:00");
   const [locationId, setLocationId] = useState("dvp-studio");
   const options: ProductOptions = {
+    configuration: customWrapping
+      ? {
+          kind: "wrapping",
+          recipient: "",
+          budget: 10000,
+          packaging: "box",
+          extras: [],
+          wrapping: customWrapping,
+        }
+      : undefined,
     size,
     color,
     wrapping: wrap,
@@ -761,6 +798,7 @@ function ProductContent({
             </select>
           </label>
         </div>
+        <WrappingEditor value={customWrapping} onChange={setCustomWrapping} />
         {p.seasonal && (
           <HolidayPersonalization p={p} onChange={setPersonalization} />
         )}
@@ -946,6 +984,20 @@ function Cart() {
                     </Link>
                     <span>{money(linePrice(x, s.catalog), s.lang)}</span>
                     {x.note && <p className="muted">{x.note}</p>}
+                    {x.options?.configuration && (
+                      <ConfigurationSummary value={x.options.configuration} />
+                    )}
+                    {x.options?.configuration?.wrapping && (
+                      <p className="cart-fulfilment">
+                        {t("Iesaiņojums", "Упаковка", "Packaging")}: +
+                        {money(
+                          wrappingPrice(x.options.configuration.wrapping),
+                          s.lang,
+                        )}{" "}
+                        · {x.options.configuration.wrapping.recipient} ·{" "}
+                        {x.options.configuration.wrapping.message}
+                      </p>
+                    )}
                     {x.options?.locationId && (
                       <p className="cart-fulfilment">
                         {pick(
@@ -1204,7 +1256,15 @@ function Checkout() {
             form.reportValidity();
             return;
           }
-          if (s.cart.some((item) => !locationMatches(s, item.id, locationId, method))) {
+          if (
+            s.cart.some(
+              (item) =>
+                !isVisible(
+                  s.catalog.find((p) => p.id === item.id)!,
+                  s.commerce,
+                ) || !locationMatches(s, item.id, locationId, method),
+            )
+          ) {
             setError(
               t(
                 "Šis saņemšanas veids nav demo-pieejams.",

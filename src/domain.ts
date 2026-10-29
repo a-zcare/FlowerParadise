@@ -1,3 +1,9 @@
+import {
+  commerceDefaults,
+  migrateCommerce,
+  validDesign,
+  designPrice,
+} from "./commerce";
 import { seasonalDefaults, migrateSeasonal } from "./seasonal-state";
 import { pick, products, type Lang, type Product, type Text } from "./data";
 import { addDays, dateKey } from "./date-utils";
@@ -114,7 +120,8 @@ export function variantPrice(p: Product, options?: ProductOptions) {
   return round(
     p.price * { S: 0.8, M: 1, L: 1.4 }[options.size] +
       (options.card ? 5 : 0) +
-      (options.extraGift ? 12 : 0),
+      (options.extraGift ? 12 : 0) +
+      designPrice(options.configuration),
   );
 }
 export const linePrice = (item: CartItem, catalog: Product[]) => {
@@ -302,6 +309,7 @@ export function initialState(now = dateKey()): DemoState {
   return {
     schemaVersion: 2,
     seasonal: seasonalDefaults(),
+    commerce: commerceDefaults(),
     lang: "lv",
     dark: false,
     cart: [],
@@ -421,10 +429,12 @@ export function migrate(raw: unknown, now = dateKey()): DemoState {
   const base = initialState(now);
   if (!obj(raw)) return base;
   base.seasonal = migrateSeasonal(raw.seasonal);
+  base.commerce = migrateCommerce(raw.commerce);
   if (["lv", "ru", "en"].includes(String(raw.lang)))
     base.lang = raw.lang as Lang;
   base.dark = raw.dark === true;
-  const ids = new Set(products.map((p) => p.id));
+  const catalogSource = [...products, ...base.commerce.customProducts];
+  const ids = new Set(catalogSource.map((p) => p.id));
   const validItem = (x: Record<string, unknown>) =>
     str(x.id) &&
     ids.has(x.id) &&
@@ -446,7 +456,9 @@ export function migrate(raw: unknown, now = dateKey()): DemoState {
         ),
       ].slice(0, 3)
     : [];
-  base.catalog = products.map((p) => {
+  base.catalog = catalogSource.map((original) => {
+    const p = base.commerce.edits[original.id] || original;
+    if (base.commerce.edits[original.id]) return p;
     const saved = Array.isArray(raw.catalog)
       ? raw.catalog.find((x) => obj(x) && x.id === p.id)
       : null;
@@ -684,6 +696,14 @@ export function migrate(raw: unknown, now = dateKey()): DemoState {
 export function validOptions(v: unknown): v is ProductOptions {
   return (
     obj(v) &&
+    (v.configuration === undefined || validDesign(v.configuration)) &&
+    (v.date === undefined || date(v.date)) &&
+    (v.time === undefined ||
+      (str(v.time) && /^\d{2}:\d{2}(–\d{2}:\d{2})?$/.test(v.time))) &&
+    (v.locationId === undefined ||
+      ["", "dvp-studio", "dvp-delivery", "dvp-vending-01"].includes(
+        String(v.locationId),
+      )) &&
     ["S", "M", "L"].includes(String(v.size)) &&
     finite(v.color, 0, 3) &&
     ["ivory", "kraft", "rose"].includes(String(v.wrapping)) &&
@@ -720,6 +740,32 @@ export function reconcile(
       }
     }
   }
+  const addedWishes = previous
+    ? next.wishlist.filter((id) => !previous.wishlist.includes(id))
+    : [];
+  const catalogEdits = { ...next.commerce.edits };
+  if (previous && next.catalog !== previous.catalog)
+    for (const p of next.catalog) {
+      const old = previous.catalog.find((x) => x.id === p.id);
+      if (
+        old &&
+        JSON.stringify({ ...old, stock: 0 }) !==
+          JSON.stringify({ ...p, stock: 0 })
+      )
+        catalogEdits[p.id] = p;
+    }
+  const commerce = {
+    ...next.commerce,
+    edits: catalogEdits,
+    events: [
+      ...next.commerce.events,
+      ...addedWishes.map((product) => ({
+        kind: "wishlist",
+        product,
+        date: new Date().toISOString(),
+      })),
+    ].slice(-500),
+  };
   const reservations = next.reservations.map((r) =>
     r.status === "reserved" &&
     ((r.expiresAt && Date.parse(r.expiresAt) <= Date.now()) || r.date < now)
@@ -746,6 +792,7 @@ export function reconcile(
     ...next,
     schemaVersion: 2,
     seasonal: next.seasonal,
+    commerce,
     batches,
     catalog,
     reservations,
@@ -897,6 +944,7 @@ export function reserveFuture(
     s.reservations.some(
       (r) =>
         r.status === "reserved" &&
+        r.product === input.product &&
         r.date === input.date &&
         r.time === input.time &&
         r.method === input.method,

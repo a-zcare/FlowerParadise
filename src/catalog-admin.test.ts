@@ -35,7 +35,7 @@ describe("catalog updates", () => {
     );
     old.batches.find((b) => b.productId === "xm-001")!.quantity = 0;
     const next = migrate(old, "2026-10-29");
-    expect(next.catalog.length).toBe(186);
+    expect(next.catalog.length).toBe(193);
     expect(next.batches.find((b) => b.productId === "xm-001")!.quantity).toBe(
       0,
     );

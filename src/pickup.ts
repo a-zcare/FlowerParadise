@@ -1,3 +1,4 @@
+import { isVisible } from "./commerce";
 import type { Text } from "./data";
 import type { DemoState } from "./models";
 import { availability } from "./domain";
@@ -79,6 +80,8 @@ export function locationMatches(
   locationId = "",
   method = "",
 ) {
+  const product = s.catalog.find((p) => p.id === productId);
+  if (!product || !isVisible(product, s.commerce)) return false;
   const location = pickupLocations.find((l) => l.id === locationId);
   if (locationId && !location) return false;
   if (location && method && location.method !== method) return false;

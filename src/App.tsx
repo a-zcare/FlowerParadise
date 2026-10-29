@@ -35,6 +35,10 @@ const Discovery = lazy(() => import("./Discovery"));
 const Personal = lazy(() => import("./Personal"));
 const ChristmasGiftBuilder = lazy(() => import("./SeasonalCommerce"));
 const HolidayAtelier = lazy(() => import("./HolidayAtelier"));
+const GiftStudio = lazy(() => import("./GiftStudio"));
+const WrappingStudio = lazy(() => import("./WrappingStudio"));
+const ChristmasDiscovery = lazy(() => import("./ChristmasDiscovery"));
+const ChristmasOrders = lazy(() => import("./ChristmasOrders"));
 const Guides = lazy(() => import("./Guides"));
 const HowItWorks = lazy(() =>
   import("./Guides").then((m) => ({ default: m.HowItWorks })),
@@ -68,11 +72,7 @@ export default function App() {
         </span>
         <span>
           {christmas
-            ? t(
-                "Ziemassvētki 2026 · Jaunais gads 2027 · Drīzumā",
-                "Рождество 2026 · Новый год 2027 · Скоро",
-                "Christmas 2026 · New Year 2027 · Coming soon",
-              )
+            ? t(...s.commerce.banner)
             : t(
                 "Skaisti mirkļi negaida. Ziedi — jebkurā laikā.",
                 "Красивые моменты не ждут. Цветы — в любое время.",
@@ -193,6 +193,23 @@ export default function App() {
           }
         >
           <Routes>
+            <Route path="/gift-studio" element={<GiftStudio />} />
+            <Route path="/wrapping-studio" element={<WrappingStudio />} />
+            {[
+              "/gift-finder",
+              "/wishlists",
+              "/last-minute",
+              "/christmas-collections",
+            ].map((path) => (
+              <Route key={path} path={path} element={<ChristmasDiscovery />} />
+            ))}
+            {[
+              "/christmas-preorders",
+              "/corporate-christmas",
+              "/order-confidence",
+            ].map((path) => (
+              <Route key={path} path={path} element={<ChristmasOrders />} />
+            ))}
             <Route path="/wreath-builder" element={<HolidayAtelier />} />
             <Route path="/advent-builder" element={<HolidayAtelier />} />
             <Route path="/how-it-works" element={<HowItWorks />} />

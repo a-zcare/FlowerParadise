@@ -1,3 +1,4 @@
+import { isVisible } from "./commerce";
 import { ArrowUpRight, Flower2, Heart, Plus, X } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -87,6 +88,7 @@ export function ProductCard({
   const { s, set, add, toast } = useStore();
   const t = useT();
   const saved = s.wishlist.includes(p.id);
+  if (!isVisible(p, s.commerce)) return null;
   return (
     <article className="product-card">
       <div className="product-photo">
@@ -94,13 +96,18 @@ export function ProductCard({
           <img
             src={img(p.photo)}
             alt={
-              p.seasonal
-                ? t(
-                    "Svētku stila iedvesmas attēls",
-                    "Изображение праздничного стиля",
-                    "Holiday style inspiration image",
+              s.commerce.media.find((m) => m.photo === p.photo)
+                ? pick(
+                    s.commerce.media.find((m) => m.photo === p.photo)!.alt,
+                    s.lang,
                   )
-                : pick(p.name, s.lang)
+                : p.seasonal
+                  ? t(
+                      "Svētku stila iedvesmas attēls",
+                      "Изображение праздничного стиля",
+                      "Holiday style inspiration image",
+                    )
+                  : pick(p.name, s.lang)
             }
             loading="lazy"
             onError={(e) => {

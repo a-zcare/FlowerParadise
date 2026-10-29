@@ -13,7 +13,14 @@ export type NotificationKind =
   | "expiring"
   | "fault"
   | "temperature"
-  | "summary";
+  | "summary"
+  | "christmasPreorder"
+  | "customizedGift"
+  | "preparingOrder"
+  | "orderPhoto"
+  | "orderReady"
+  | "corporateInquiry"
+  | "materialShortage";
 export interface NotificationEntry {
   id: string;
   kind: NotificationKind;
@@ -44,6 +51,7 @@ export interface SeasonalState {
     location: string;
     time: string;
     vending: string;
+    giftType: string;
     completed: boolean;
   };
   notifications: {
@@ -78,6 +86,7 @@ export const seasonalDefaults = (): SeasonalState => ({
     location: "centre",
     time: "evening",
     vending: "yes",
+    giftType: "any",
     completed: false,
   },
   notifications: {
@@ -89,6 +98,42 @@ export const seasonalDefaults = (): SeasonalState => ({
   },
 });
 export const notificationTemplates: Record<NotificationKind, Text> = {
+  christmasPreorder: [
+    "Svētku priekšpasūtījums · Tikai lokāls demo. Nekas nav nosūtīts.",
+    "Праздничный предзаказ · Только локальное демо. Ничего не отправлено.",
+    "Christmas preorder · Local demo only. Nothing was sent.",
+  ],
+  customizedGift: [
+    "Personalizētā dāvana · Tikai lokāls demo. Nekas nav nosūtīts.",
+    "Персонализированный подарок · Только локальное демо. Ничего не отправлено.",
+    "Customized gift · Local demo only. Nothing was sent.",
+  ],
+  preparingOrder: [
+    "Pasūtījums sagatavošanā · Tikai lokāls demo. Nekas nav nosūtīts.",
+    "Заказ готовится · Только локальное демо. Ничего не отправлено.",
+    "Order preparing · Local demo only. Nothing was sent.",
+  ],
+  orderPhoto: [
+    "Pasūtījuma foto priekšskatījums · Tikai lokāls demo. Nekas nav nosūtīts.",
+    "Предпросмотр фото заказа · Только локальное демо. Ничего не отправлено.",
+    "Order photo preview · Local demo only. Nothing was sent.",
+  ],
+  orderReady: [
+    "Gatavs saņemšanai · Tikai lokāls demo. Nekas nav nosūtīts.",
+    "Готов к получению · Только локальное демо. Ничего не отправлено.",
+    "Order ready · Local demo only. Nothing was sent.",
+  ],
+  corporateInquiry: [
+    "Uzņēmuma pieprasījums · Tikai lokāls demo. Nekas nav nosūtīts.",
+    "Корпоративный запрос · Только локальное демо. Ничего не отправлено.",
+    "Corporate inquiry · Local demo only. Nothing was sent.",
+  ],
+  materialShortage: [
+    "Materiālu trūkums · Tikai lokāls demo. Nekas nav nosūtīts.",
+    "Нехватка материалов · Только локальное демо. Ничего не отправлено.",
+    "Material shortage · Local demo only. Nothing was sent.",
+  ],
+
   order: [
     "Demo pasūtījums ir apstiprināts. Nav īsta maksājuma.",
     "Демо-заказ подтверждён. Реального платежа нет.",
@@ -161,6 +206,38 @@ export const notificationTemplates: Record<NotificationKind, Text> = {
   ],
 };
 export const notificationLabels: Record<NotificationKind, Text> = {
+  christmasPreorder: [
+    "Svētku priekšpasūtījums",
+    "Праздничный предзаказ",
+    "Christmas preorder",
+  ],
+  customizedGift: [
+    "Personalizētā dāvana",
+    "Персонализированный подарок",
+    "Customized gift",
+  ],
+  preparingOrder: [
+    "Pasūtījums sagatavošanā",
+    "Заказ готовится",
+    "Order preparing",
+  ],
+  orderPhoto: [
+    "Pasūtījuma foto priekšskatījums",
+    "Предпросмотр фото заказа",
+    "Order photo preview",
+  ],
+  orderReady: ["Gatavs saņemšanai", "Готов к получению", "Order ready"],
+  corporateInquiry: [
+    "Uzņēmuma pieprasījums",
+    "Корпоративный запрос",
+    "Corporate inquiry",
+  ],
+  materialShortage: [
+    "Materiālu trūkums",
+    "Нехватка материалов",
+    "Material shortage",
+  ],
+
   order: ["Pasūtījums", "Заказ", "Order confirmation"],
   pickup: ["Saņemšana", "Получение", "Pickup reminder"],
   reservation: ["Rezervācija", "Бронирование", "Reservation status"],
@@ -220,7 +297,13 @@ export function migrateSeasonal(raw: unknown): SeasonalState {
       ]
     : [];
   if (x.survey) {
-    for (const k of ["budget", "location", "time", "vending"] as const)
+    for (const k of [
+      "budget",
+      "location",
+      "time",
+      "vending",
+      "giftType",
+    ] as const)
       if (typeof x.survey[k] === "string")
         d.survey[k] = x.survey[k].slice(0, 100);
     d.survey.completed = x.survey.completed === true;

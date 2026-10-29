@@ -126,6 +126,10 @@ const safety: Text[] = [
 ];
 export interface SeasonalDetails {
   campaign: "christmas-2026";
+  preparationDays: number;
+  readiness: "now" | "same-day" | "next-day" | "made-to-order";
+  natural: boolean;
+  indoor: boolean;
   materials: Text;
   materialTags: string[];
   dimensions: string;
@@ -165,6 +169,15 @@ export const holidayProducts: Product[] = records.map(({ name, group }, i) => {
   );
   const detail: SeasonalDetails = {
     campaign: "christmas-2026",
+    preparationDays: [0, 1, 3, 6].includes(group) ? 2 : group === 7 ? 4 : 1,
+    readiness:
+      group === 7
+        ? "made-to-order"
+        : [2, 5, 6].includes(group)
+          ? "same-day"
+          : "next-day",
+    natural: [0, 1, 3, 6].includes(group),
+    indoor: true,
     materials: materials[group],
     materialTags: [
       ["greenery", "wood", "textile"],

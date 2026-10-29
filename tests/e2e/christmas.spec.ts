@@ -11,18 +11,18 @@ test.beforeEach(async ({ page }) => {
     "A little wonder.",
   );
 });
-test("Christmas catalog has 150 records, loads efficiently and filters by category and recipient", async ({
+test("Christmas catalog has 157 records, loads efficiently and filters by category and recipient", async ({
   page,
 }) => {
   await route(page, "/christmas");
-  await expect(page.locator(".results")).toContainText("150");
+  await expect(page.locator(".results")).toContainText("157");
   await expect(page.locator(".catalog-products .product-card")).toHaveCount(36);
   await page.getByRole("button", { name: /Show more/ }).click();
   await expect(page.locator(".catalog-products .product-card")).toHaveCount(72);
   await page
     .getByRole("textbox", { name: "Search products", exact: true })
     .fill("gnome");
-  await expect(page.locator(".results")).toContainText("19");
+  await expect(page.locator(".results")).toContainText("20");
   await page
     .getByRole("textbox", { name: "Search products", exact: true })
     .fill("");

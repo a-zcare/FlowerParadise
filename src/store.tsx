@@ -1,3 +1,4 @@
+import { appendCart } from "./commerce-cart";
 import {
   createContext,
   useCallback,
@@ -11,7 +12,6 @@ import {
 import { pick, type Lang } from "./data";
 import {
   STORAGE_KEY,
-  availability,
   code,
   collectVending,
   consumeInventory,
@@ -21,7 +21,6 @@ import {
   prepareReorder,
   reconcile,
   reserveVending,
-  variantPrice,
 } from "./domain";
 import type { CartItem, DemoState, ProductOptions } from "./models";
 import { demoRepository } from "./repository";
@@ -53,6 +52,7 @@ interface Store {
     price?: number,
     options?: ProductOptions,
   ) => boolean;
+  addMany: (lines: CartItem[]) => boolean;
   compare: (id: string) => void;
   reset: () => void;
   reserveSlot: (slotId: string) => string | null;
@@ -66,6 +66,7 @@ const Context = createContext<Store>({
   set: () => {},
   toast: () => {},
   add: () => false,
+  addMany: () => false,
   compare: () => {},
   reset: () => {},
   reserveSlot: () => null,
@@ -119,45 +120,40 @@ export function Provider({ children }: { children: ReactNode }) {
     price?: number,
     options?: ProductOptions,
   ) {
-    const p = s.catalog.find((p) => p.id === productId);
-    const existing = s.cart
-      .filter((x) => x.id === productId)
-      .reduce((n, x) => n + x.qty, 0);
-    if (
-      !p ||
-      !Number.isInteger(qty) ||
-      qty < 1 ||
-      existing + qty > Math.min(20, availability(s, productId).quantity)
-    ) {
+    return addMany([{ id: productId, qty, note, price, options }]);
+  }
+  function addMany(lines: CartItem[]) {
+    if (!appendCart(s, lines)) {
       toast(
         local(
-          "Nepietiek demo krājumu. Izvēlies citu pušķi.",
-          "Недостаточно демо-запаса. Выберите другой букет.",
-          "Not enough demo stock. Choose another bouquet.",
+          "Nepietiek demo krājumu vai nederīga konfigurācija.",
+          "Недостаточно демо-запаса или неверная конфигурация.",
+          "Not enough demo stock or invalid configuration.",
         ),
       );
       return false;
     }
-    const actualPrice = options ? variantPrice(p, options) : price;
     set((old) => {
-      const found = old.cart.find(
-        (x) =>
-          x.id === productId &&
-          x.note === note &&
-          x.price === actualPrice &&
-          JSON.stringify(x.options) === JSON.stringify(options),
-      );
-      return {
-        ...old,
-        cart: found
-          ? old.cart.map((x) =>
-              x === found ? { ...x, qty: Math.min(20, x.qty + qty) } : x,
-            )
-          : [
-              ...old.cart,
-              { id: productId, qty, note, price: actualPrice, options },
-            ],
-      };
+      const cart = appendCart(old, lines);
+      return cart
+        ? {
+            ...old,
+            cart,
+            commerce: {
+              ...old.commerce,
+              events: [
+                ...old.commerce.events,
+                ...lines
+                  .filter((l) => l.options?.configuration)
+                  .map((l) => ({
+                    kind: "builder",
+                    product: l.id,
+                    date: new Date().toISOString(),
+                  })),
+              ].slice(-500),
+            },
+          }
+        : old;
     });
     return true;
   }
@@ -229,6 +225,7 @@ export function Provider({ children }: { children: ReactNode }) {
         set,
         toast,
         add,
+        addMany,
         compare,
         reset,
         reserveSlot,

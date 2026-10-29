@@ -302,5 +302,61 @@
       "Адвент-календарь со звёздными коробочками",
       "Star Box Advent Calendar"
     ]
+  },
+  {
+    "group": 0,
+    "name": [
+      "Skuju briežu ģimene ar gaismiņām",
+      "Хвойная оленья семья с огоньками",
+      "Evergreen Deer Family with Fairy Lights"
+    ]
+  },
+  {
+    "group": 1,
+    "name": [
+      "Adventes vainags ar maināmu dekoru",
+      "Адвентский венок со сменным декором",
+      "Interchangeable Decoration Advent Wreath"
+    ]
+  },
+  {
+    "group": 2,
+    "name": [
+      "Rūķu ģimene ar miniatūru eglīti",
+      "Семья гномов с миниатюрной ёлкой",
+      "Gnome Family with Miniature Tree"
+    ]
+  },
+  {
+    "group": 3,
+    "name": [
+      "Ekskluzīva ziemas meža galda sala",
+      "Эксклюзивный зимний лес для стола",
+      "Exclusive Winter Forest Table Island"
+    ]
+  },
+  {
+    "group": 4,
+    "name": [
+      "Ziemassvētku ragaviņu un zaru dekors",
+      "Рождественские сани с ветками",
+      "Christmas Sleigh and Branch Display"
+    ]
+  },
+  {
+    "group": 6,
+    "name": [
+      "Galda ziemas mežs ar vārda zīmi",
+      "Настольный зимний лес с именной табличкой",
+      "Tabletop Winter Forest with Name Tag"
+    ]
+  },
+  {
+    "group": 7,
+    "name": [
+      "Ģimenes Ziemassvētku atmiņu lāde",
+      "Семейный рождественский сундук воспоминаний",
+      "Family Christmas Memory Chest"
+    ]
   }
 ]

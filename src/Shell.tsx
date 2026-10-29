@@ -16,6 +16,23 @@ import { pick, type Text } from "./data";
 import { useStore } from "./store";
 import { useT } from "./ui";
 const labels: Record<string, Text> = {
+  "/gift-studio": ["Dāvanas 2.0", "Подарки 2.0", "Gift Builder 2.0"],
+  "/wrapping-studio": [
+    "Iesaiņošanas studija",
+    "Студия упаковки",
+    "Wrapping Studio",
+  ],
+  "/gift-finder": ["Dāvanu meklētājs", "Подбор подарков", "Gift Finder"],
+  "/wishlists": ["Vēlmju saraksti", "Списки желаний", "Wishlists"],
+  "/last-minute": ["Ātrās dāvanas", "Быстрые подарки", "Last-minute gifts"],
+  "/christmas-collections": [
+    "Svētku kolekcijas",
+    "Праздничные коллекции",
+    "Christmas Collections",
+  ],
+  "/christmas-preorders": ["Priekšpasūtījumi", "Предзаказы", "Preorders"],
+  "/corporate-christmas": ["Uzņēmumiem", "Компаниям", "Corporate Christmas"],
+  "/order-confidence": ["Sagatavošana", "Подготовка", "Order Preparation"],
   "/wreath-builder": [
     "Vainaga konstruktors",
     "Конструктор венка",

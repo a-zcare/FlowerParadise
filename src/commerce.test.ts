@@ -20,7 +20,12 @@ import {
   rigaClock,
 } from "./commerce";
 import { initialState, migrate, variantPrice, cartTotals } from "./domain";
-import { exportProductCsv, previewProductCsv, readCsv } from "./product-csv";
+import {
+  rollbackCatalog,
+  exportProductCsv,
+  previewProductCsv,
+  readCsv,
+} from "./product-csv";
 const images = new Set(products.map((p) => p.photo));
 describe("complete seasonal catalog", () => {
   it("preserves flower IDs and provides eight category minimums plus seven physical calendars", () => {
@@ -409,4 +414,36 @@ it("keeps preparation estimates consistent with quick-gift readiness concepts", 
     if (p.seasonal!.readiness === "made-to-order")
       expect(p.seasonal!.preparationDays).toBeGreaterThanOrEqual(2);
   }
+});
+
+it("catalog rollback preserves later inventory consumption and customer drafts", () => {
+  const before = initialState("2026-10-29");
+  const current = structuredClone(before);
+  current.catalog[0].price = 99;
+  current.catalog[0].stock = 2;
+  current.batches[0].quantity = 2;
+  current.commerce.drafts.later = defaultDesign("gift");
+  const restored = rollbackCatalog(current, before);
+  expect(restored.catalog[0].price).toBe(before.catalog[0].price);
+  expect(restored.catalog[0].stock).toBe(2);
+  expect(restored.batches[0].quantity).toBe(2);
+  expect(restored.commerce.drafts.later).toBeTruthy();
+});
+it("rollback archives new products rather than breaking later order references", () => {
+  const before = initialState();
+  const current = structuredClone(before);
+  const created = { ...current.catalog[36], id: "demo-after" };
+  current.catalog.push(created);
+  current.commerce.customProducts.push(created);
+  current.orders.push({
+    id: "new-order",
+    items: [{ id: created.id, qty: 1 }],
+    date: "2026-12-24",
+    total: 49,
+    method: "pickup",
+  });
+  const restored = rollbackCatalog(current, before);
+  expect(restored.orders[0].items[0].id).toBe(created.id);
+  expect(restored.catalog.some((p) => p.id === created.id)).toBe(true);
+  expect(isVisible(created, restored.commerce)).toBe(false);
 });

@@ -191,3 +191,40 @@ export function previewProductCsv(
   });
   return { errors, rows: errors.length ? [] : result };
 }
+
+// Catalog undo must never rewind orders, inventory consumption or customer drafts.
+export function rollbackCatalog(
+  state: import("./models").DemoState,
+  backup: Pick<import("./models").DemoState, "catalog" | "commerce">,
+): import("./models").DemoState {
+  const previous = new Set(backup.catalog.map((p) => p.id));
+  const added = state.catalog.filter((p) => !previous.has(p.id));
+  const edits = { ...backup.commerce.edits };
+  const meta = { ...backup.commerce.productMeta };
+  for (const p of added) {
+    if (state.commerce.edits[p.id]) edits[p.id] = state.commerce.edits[p.id];
+    meta[p.id] = { status: "archived", visible: false, seasonal: !!p.seasonal };
+  }
+  return {
+    ...state,
+    catalog: [
+      ...backup.catalog.map((p) => ({
+        ...p,
+        stock: state.catalog.find((x) => x.id === p.id)?.stock ?? p.stock,
+      })),
+      ...added,
+    ],
+    commerce: {
+      ...state.commerce,
+      edits,
+      productMeta: meta,
+      deleted: [
+        ...new Set([...backup.commerce.deleted, ...added.map((p) => p.id)]),
+      ],
+      customProducts: [
+        ...backup.commerce.customProducts,
+        ...state.commerce.customProducts.filter((p) => !previous.has(p.id)),
+      ],
+    },
+  };
+}

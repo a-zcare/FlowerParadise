@@ -332,7 +332,16 @@ for (const width of [390, 1440])
         await page
           .getByRole("checkbox", { name: /Add custom packaging/ })
           .check();
-      await expect(page.locator("main h1").first()).toBeVisible();
+      const expectedTitle: Record<string, string> = {
+        "/": "A little wonder. Made to give.",
+        "/gift-studio": "Gift Builder 2.0",
+        "/wrapping-studio": "Premium Gift Wrapping Studio",
+        "/product/xm-001": "Classic Evergreen Teddy Bear",
+        "/themes": "One paradise. Your kind of beautiful.",
+      };
+      await expect(
+        page.getByRole("heading", { name: expectedTitle[path], exact: true }),
+      ).toBeVisible();
       await page.locator("main img").evaluateAll(async (images) => {
         await Promise.all(
           images.map(async (image) => {

@@ -22,6 +22,7 @@ import {
 import type { CommerceState, ProductMeta } from "./commerce-model";
 import {
   exportProductCsv,
+  rollbackCatalog,
   previewProductCsv,
   type CsvProduct,
 } from "./product-csv";
@@ -212,12 +213,7 @@ export default function CommerceAdmin() {
         <button
           className="btn outline"
           onClick={() => {
-            set((o) => ({
-              ...o,
-              catalog: backup.catalog,
-              commerce: backup.commerce,
-              batches: backup.batches,
-            }));
+            set((o) => rollbackCatalog(o, backup));
             setBackup(null);
             setConfirm(false);
             notify();

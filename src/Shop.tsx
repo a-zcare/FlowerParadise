@@ -1121,7 +1121,7 @@ function Checkout() {
       : "pickup",
   );
   const [locationId, setLocationId] = useState(
-    s.cart[0]?.options?.locationId === "dvp-delivery"
+    s.cart.some((x) => x.options?.method === "delivery")
       ? "dvp-delivery"
       : "dvp-studio",
   );
@@ -1204,7 +1204,7 @@ function Checkout() {
             form.reportValidity();
             return;
           }
-          if (s.cart.some((item) => !locationMatches(s, item.id, locationId))) {
+          if (s.cart.some((item) => !locationMatches(s, item.id, locationId, method))) {
             setError(
               t(
                 "Šis saņemšanas veids nav demo-pieejams.",
@@ -1219,7 +1219,7 @@ function Checkout() {
             counts.set(x.id, (counts.get(x.id) || 0) + x.qty),
           );
           if (
-            [...counts].some(([id, qty]) => availability(s, id).quantity < qty)
+            [...counts].some(([id, qty]) => availability(s, id).studio < qty)
           ) {
             setError(
               t(

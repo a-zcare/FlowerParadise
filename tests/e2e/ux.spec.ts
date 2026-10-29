@@ -137,15 +137,15 @@ test("ten translated guides use valid images and allow navigation to products", 
 for (const width of [320, 390, 768, 1024, 1440, 1920])
   test(`new flows fit at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    for (const route of [
-      "/wreath-builder",
-      "/advent-builder",
-      "/guides",
-      "/how-it-works",
-      "/admin?view=experience",
+    for (const [route, scope] of [
+      ["/wreath-builder", ".holiday-atelier"],
+      ["/advent-builder", ".holiday-atelier"],
+      ["/guides", ".journal"],
+      ["/how-it-works", ".how-page"],
+      ["/admin?view=experience", ".admin-content"],
     ]) {
       await page.goto(`./#${route}`);
-      await expect(page.locator("main h1")).toBeVisible();
+      await expect(page.locator(`${scope} h1`)).toBeVisible();
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth + 1,
@@ -153,3 +153,27 @@ for (const width of [320, 390, 768, 1024, 1440, 1920])
       ).toBe(true);
     }
   });
+
+test("mixed gift choices start checkout with one consistent delivery method and location", async ({
+  page,
+}) => {
+  await page.goto("./#/product/fp-1");
+  await page
+    .locator(".detail-copy")
+    .getByRole("button", { name: "Add to bag", exact: true })
+    .click();
+  await page.goto("./#/product/fp-2");
+  await page
+    .locator(".detail-copy")
+    .getByRole("combobox", { name: /Fulfilment option/ })
+    .selectOption("delivery");
+  await page
+    .locator(".detail-copy")
+    .getByRole("button", { name: "Add to bag", exact: true })
+    .click();
+  await page.goto("./#/checkout");
+  await expect(page.locator(".pickup-selection select")).toHaveValue(
+    "dvp-delivery",
+  );
+  await expect(page.locator(".choice.selected")).toContainText("Delivery");
+});

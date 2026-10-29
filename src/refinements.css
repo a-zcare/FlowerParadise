@@ -301,8 +301,17 @@ html[data-theme-tone="dark"] dialog::backdrop {
   .pwa-notice {
     bottom: calc(var(--mobile-bottom-clearance) + 12px);
   }
-  body:has(dialog[open]) .mobile-bottom-nav {
+  body:has(dialog[open]) .mobile-bottom-nav,
+  body:has(header nav.open) .mobile-bottom-nav {
     visibility: hidden;
+  }
+  #root header nav.open {
+    max-height: calc(
+      100dvh - 145px - env(safe-area-inset-top, 0px) -
+        env(safe-area-inset-bottom, 0px)
+    );
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   dialog {
     max-height: calc(

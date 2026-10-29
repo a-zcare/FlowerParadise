@@ -130,6 +130,16 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1280, 1440, 1920])
     await card.getByRole("button", { name: "Add to bag", exact: true }).click();
     await page.goto("./#/cart");
     await expect(page.locator(".cart-line")).toHaveCount(1);
+    if (width <= 600) {
+      await page.getByRole("button", { name: "Menu", exact: true }).click();
+      await expect(page.locator("header nav.open")).toBeVisible();
+      await expect(page.locator(".mobile-bottom-nav")).toBeHidden();
+      expect(
+        await page.locator("header nav.open").evaluate((el) => el.clientHeight),
+      ).toBeLessThan(1000);
+      await page.getByRole("button", { name: "Menu", exact: true }).click();
+      await expect(page.locator(".mobile-bottom-nav")).toBeVisible();
+    }
     await expect
       .poll(() =>
         page.evaluate(() => document.documentElement.scrollWidth - innerWidth),

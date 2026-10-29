@@ -27,18 +27,18 @@ const f = {
 };
 const now = "2026-10-28";
 describe("Christmas catalog and preservation", () => {
-  it("preserves 36 flower records and adds 110 named holiday products plus two physical Advent calendars", () => {
+  it("preserves 36 flower records and adds 157 distinct holiday products across nine collections", () => {
     expect(flowerProducts).toHaveLength(36);
-    expect(holidayProducts).toHaveLength(112);
-    expect(products).toHaveLength(148);
-    expect(new Set(products.map((p) => p.id)).size).toBe(148);
-    expect(new Set(holidayProducts.map((p) => p.name[2])).size).toBe(112);
+    expect(holidayProducts).toHaveLength(157);
+    expect(products).toHaveLength(193);
+    expect(new Set(products.map((p) => p.id)).size).toBe(193);
+    expect(new Set(holidayProducts.map((p) => p.name[2])).size).toBe(157);
     expect(
       Array.from(
         { length: 9 },
         (_, g) => holidayProducts.filter((p) => p.category === 12 + g).length,
       ),
-    ).toEqual([15, 15, 15, 15, 15, 15, 10, 10, 2]);
+    ).toEqual([20, 20, 20, 20, 20, 20, 15, 15, 7]);
   });
   it("supplies all translations, care, safety, materials and images with honest labels", () => {
     for (const p of holidayProducts) {
@@ -62,13 +62,13 @@ describe("Christmas catalog and preservation", () => {
     }
   });
   it("filters holiday and regular flowers through one catalog function", () => {
-    expect(filterCatalog(products, f, "en")).toHaveLength(112);
+    expect(filterCatalog(products, f, "en")).toHaveLength(157);
     expect(
       filterCatalog(products, { ...f, scope: "flowers" }, "en"),
     ).toHaveLength(36);
     expect(
       filterCatalog(products, { ...f, category: "12" }, "ru"),
-    ).toHaveLength(15);
+    ).toHaveLength(20);
     expect(
       filterCatalog(products, { ...f, query: "rūķis" }, "lv").length,
     ).toBeGreaterThan(0);
@@ -239,7 +239,7 @@ describe("Safe seasonal settings", () => {
     const upgraded = migrate(old, now);
     expect(availability(upgraded, "xm-001", now).studio).toBe(5);
     expect(availability(upgraded, "fp-1", now).quantity).toBe(0);
-    expect(upgraded.catalog).toHaveLength(148);
+    expect(upgraded.catalog).toHaveLength(193);
   });
   it("rejects malformed settings, unknown channels and invalid Advent windows", () => {
     const s = migrateSeasonal({
@@ -252,8 +252,8 @@ describe("Safe seasonal settings", () => {
     expect(s.notifications.log).toHaveLength(0);
     expect(s.campaign.sections).toEqual([0]);
   });
-  it("provides all fourteen notification templates in three languages", () => {
-    expect(Object.keys(notificationTemplates)).toHaveLength(14);
+  it("provides all twenty-one notification templates in three languages", () => {
+    expect(Object.keys(notificationTemplates)).toHaveLength(21);
     for (const tuple of Object.values(notificationTemplates)) {
       expect(tuple).toHaveLength(3);
       expect(tuple.every((t) => t.length > 25)).toBe(true);

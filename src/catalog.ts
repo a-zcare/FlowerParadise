@@ -1,3 +1,6 @@
+import { isVisible } from "./commerce";
+import type { DemoState } from "./models";
+import { locationMatches } from "./pickup";
 import { categories, pick, type Lang, type Product } from "./data";
 export interface CatalogFilters {
   scope: "flowers" | "holiday" | "all";
@@ -13,16 +16,21 @@ export interface CatalogFilters {
   size?: string;
   giftReady?: boolean;
   method?: string;
+  locationId?: string;
 }
 export function filterCatalog(
   products: Product[],
   f: CatalogFilters,
   lang: Lang,
+  state?: DemoState,
 ) {
   return products.filter(
     (p) =>
+      (!state || isVisible(p, state.commerce)) &&
       (f.scope === "all" ||
-        (f.scope === "holiday" ? !!p.seasonal : !p.seasonal)) &&
+        (f.scope === "holiday"
+          ? (state?.commerce.productMeta[p.id]?.seasonal ?? !!p.seasonal)
+          : !(state?.commerce.productMeta[p.id]?.seasonal ?? !!p.seasonal))) &&
       (!f.query ||
         `${pick(p.name, lang)} ${pick(p.composition, lang)} ${pick(categories[p.category], lang)} ${pick(p.description, lang)}`
           .toLowerCase()
@@ -42,6 +50,8 @@ export function filterCatalog(
           : f.size === "large"
             ? p.size.startsWith("45")
             : p.size.startsWith("30"))) &&
-      (!f.method || ["pickup", "delivery"].includes(f.method)),
+      (state
+        ? locationMatches(state, p.id, f.locationId, f.method)
+        : !f.method || ["pickup", "delivery"].includes(f.method)),
   );
 }

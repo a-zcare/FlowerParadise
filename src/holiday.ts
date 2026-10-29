@@ -1,5 +1,6 @@
 import imagery from "./holiday-imagery.json";
 import names from "./holiday-names.json";
+import extra from "./holiday-extra.json";
 import type { Product, Text } from "./data";
 export const holidayCategories: Text[] = [
   [
@@ -125,6 +126,10 @@ const safety: Text[] = [
 ];
 export interface SeasonalDetails {
   campaign: "christmas-2026";
+  preparationDays: number;
+  readiness: "now" | "same-day" | "next-day" | "made-to-order";
+  natural: boolean;
+  indoor: boolean;
   materials: Text;
   materialTags: string[];
   dimensions: string;
@@ -138,8 +143,14 @@ export interface SeasonalDetails {
   perishable: boolean;
   giftReady: boolean;
 }
-export const holidayProducts: Product[] = names.map((name, i) => {
-  const group = i < 90 ? Math.floor(i / 15) : i < 100 ? 6 : i < 110 ? 7 : 8;
+const records = [
+  ...names.map((name, i) => ({
+    name,
+    group: i < 90 ? Math.floor(i / 15) : i < 100 ? 6 : i < 110 ? 7 : 8,
+  })),
+  ...extra,
+];
+export const holidayProducts: Product[] = records.map(({ name, group }, i) => {
   const title = name[2];
   const mini = /Mini|Ornament|Custom Name/.test(title);
   const large = /Luxury|Premium|Signature|Family|Collection|Tall/.test(title);
@@ -158,6 +169,21 @@ export const holidayProducts: Product[] = names.map((name, i) => {
   );
   const detail: SeasonalDetails = {
     campaign: "christmas-2026",
+    preparationDays:
+      group === 7
+        ? 4
+        : [2, 5, 6].includes(group)
+          ? 0
+          : [3, 4].includes(group)
+            ? 1
+            : 2,
+    readiness: [2, 5, 6].includes(group)
+      ? "same-day"
+      : [3, 4].includes(group)
+        ? "next-day"
+        : "made-to-order",
+    natural: [0, 1, 3, 6].includes(group),
+    indoor: true,
     materials: materials[group],
     materialTags: [
       ["greenery", "wood", "textile"],
@@ -188,8 +214,8 @@ export const holidayProducts: Product[] = names.map((name, i) => {
             : ["her", "him", "parents", "colleagues"],
     safety: safety[group === 6 ? 4 : group >= 7 ? 0 : group],
     related: [
-      `xm-${String(((i + 1) % 110) + 1).padStart(3, "0")}`,
-      `xm-${String(((i + 2) % 110) + 1).padStart(3, "0")}`,
+      `xm-${String(((i + 1) % records.length) + 1).padStart(3, "0")}`,
+      `xm-${String(((i + 2) % records.length) + 1).padStart(3, "0")}`,
     ],
     imageKind: imagery[
       `xm-${String(i + 1).padStart(3, "0")}` as keyof typeof imagery

@@ -1,5 +1,16 @@
+import { isVisible } from "./commerce";
 import { ArrowUpRight, Flower2, Heart, Plus, X } from "lucide-react";
-import { useEffect, useRef, type ReactNode } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+const QuickProduct = lazy(() =>
+  import("./Shop").then((m) => ({ default: m.ProductContent })),
+);
 import { Link } from "react-router-dom";
 import { categories, img, money, pick, type Product } from "./data";
 import { AvailabilityBadge, CompareButton } from "./feature-ui";
@@ -86,21 +97,30 @@ export function ProductCard({
 }) {
   const { s, set, add, toast } = useStore();
   const t = useT();
+  const [quickOpen, setQuickOpen] = useState(false);
   const saved = s.wishlist.includes(p.id);
+  if (!isVisible(p, s.commerce)) return null;
   return (
-    <article className="product-card">
+    <article
+      className={`product-card ${p.seasonal ? "seasonal-product-card" : ""}`}
+    >
       <div className="product-photo">
         <Link to={`/product/${p.id}`}>
           <img
             src={img(p.photo)}
             alt={
-              p.seasonal
-                ? t(
-                    "Svētku stila iedvesmas attēls",
-                    "Изображение праздничного стиля",
-                    "Holiday style inspiration image",
+              s.commerce.media.find((m) => m.photo === p.photo)
+                ? pick(
+                    s.commerce.media.find((m) => m.photo === p.photo)!.alt,
+                    s.lang,
                   )
-                : pick(p.name, s.lang)
+                : p.seasonal
+                  ? t(
+                      "Svētku stila iedvesmas attēls",
+                      "Изображение праздничного стиля",
+                      "Holiday style inspiration image",
+                    )
+                  : pick(p.name, s.lang)
             }
             loading="lazy"
             onError={(e) => {
@@ -115,9 +135,6 @@ export function ProductCard({
             }}
           />
         </Link>
-        {p.seasonal && (
-          <span className="seasonal-badge">CHRISTMAS 2026 / 2027</span>
-        )}
         {p.stock < 3 && (
           <span className="badge">
             {t("Mazā izlasē", "Малая серия", "Small batch")}
@@ -141,11 +158,13 @@ export function ProductCard({
         >
           <Heart size={19} fill={saved ? "currentColor" : "none"} />
         </IconButton>
-        {onQuick && (
-          <button type="button" className="quick" onClick={() => onQuick(p)}>
-            {t("Ātrais skats", "Быстрый просмотр", "Quick view")}
-          </button>
-        )}
+        <button
+          type="button"
+          className="quick"
+          onClick={() => (onQuick ? onQuick(p) : setQuickOpen(true))}
+        >
+          {t("Ātrais skats", "Быстрый просмотр", "Quick view")}
+        </button>
       </div>
       {p.seasonal && (
         <small className="concept-caption">
@@ -155,6 +174,20 @@ export function ProductCard({
             "Style inspiration · Demo product",
           )}
         </small>
+      )}
+      {p.seasonal && (
+        <div className="gift-indicators">
+          {p.customizable && (
+            <span>
+              {t("Personalizējams", "Персонализация", "Personalizable")}
+            </span>
+          )}
+          {p.seasonal.giftReady && (
+            <span>
+              {t("Gatavs dāvināšanai", "Готов к подарку", "Gift-ready")}
+            </span>
+          )}
+        </div>
       )}
       <div className="product-meta">
         <span>{pick(categories[p.category], s.lang)}</span>
@@ -185,6 +218,17 @@ export function ProductCard({
         <AvailabilityBadge p={p} />
         <CompareButton id={p.id} />
       </div>
+      {quickOpen && (
+        <Modal title={pick(p.name, s.lang)} close={() => setQuickOpen(false)}>
+          <Suspense
+            fallback={
+              <p role="status">{t("Ielādē…", "Загрузка…", "Loading…")}</p>
+            }
+          >
+            <QuickProduct p={p} compact />
+          </Suspense>
+        </Modal>
+      )}
     </article>
   );
 }

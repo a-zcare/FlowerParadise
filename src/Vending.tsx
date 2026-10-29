@@ -7,6 +7,7 @@ import {
   UnlockKeyhole,
   Wrench,
 } from "lucide-react";
+import { PickupSteps, PickupSelection } from "./Pickup";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { img, money, pick } from "./data";
@@ -25,7 +26,9 @@ export default function Vending() {
   const c = s.compartments.find((c) => c.id === selected);
   const p = s.catalog.find((p) => p.id === c?.productId);
   const canReserve =
-    !!c && availability(s, c.productId).slots.some((x) => x.id === c.id);
+    !!c &&
+    !s.seasonal.discovery.unavailableLocations.includes("dvp-vending-01") &&
+    availability(s, c.productId).slots.some((x) => x.id === c.id);
   return (
     <div className="page">
       <Title
@@ -46,6 +49,8 @@ export default function Vending() {
         )}
       />
       <Demo />
+      <PickupSteps />
+      <PickupSelection fixed value="dvp-vending-01" onChange={() => {}} />
       <div className="vending-layout">
         <div className="machine">
           <div className="machine-brand">
@@ -54,9 +59,11 @@ export default function Vending() {
           <div className="machine-grid">
             {s.compartments.map((slot, i) => {
               const product = s.catalog.find((p) => p.id === slot.productId)!;
-              const available = availability(s, product.id).slots.some(
-                (x) => x.id === slot.id,
-              );
+              const available =
+                !s.seasonal.discovery.unavailableLocations.includes(
+                  "dvp-vending-01",
+                ) &&
+                availability(s, product.id).slots.some((x) => x.id === slot.id);
               const label =
                 slot.status === "reserved"
                   ? t("Rezervēts", "Забронирован", "Reserved")

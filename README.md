@@ -8,7 +8,7 @@ Node 22 or later. `npm ci`, then `npm run dev`. Production: `npm run build`. Qua
 
 ## Experience
 
-148 translated product records: 36 original flower/gift products, 110 Christmas 2026 / New Year 2027 concepts and two physical Advent calendars across 21 collections; search, category/price/occasion/colour filtering and sorting; quick view; product galleries; quantities, gift messages and cards; cart, wishlist, BLOOM10 demo promotion and validated checkout. A bespoke bouquet configurator updates its price dynamically. The four-compartment vending simulator supports reservations, simulated payments, one-use codes and unlocking. Future reservations reject matching local time slots. Important dates support create/edit/delete, annual recurrence, notification previews, snoozing and dismissal. Gifts include scheduled recipient previews and one-use demo certificate redemption. Weekly, fortnightly and monthly subscriptions have duration, preference and collection options.
+193 translated product records: 36 original flower/gift products and 157 Christmas 2026 / New Year 2027 concepts, including seven physical Advent calendar concepts across 21 collections; search, category/price/occasion/colour filtering and sorting; quick view; product galleries; quantities, gift messages and cards; cart, wishlist, BLOOM10 demo promotion and validated checkout. A bespoke bouquet configurator updates its price dynamically. The four-compartment vending simulator supports reservations, simulated payments, one-use codes and unlocking. Future reservations reject matching local time slots. Important dates support create/edit/delete, annual recurrence, notification previews, snoozing and dismissal. Gifts include scheduled recipient previews and one-use demo certificate redemption. Weekly, fortnightly and monthly subscriptions have duration, preference and collection options.
 
 Customer and administrative dashboards share browser-local state. Product edits update catalog names, prices and stock locally. Admin analytics are explicitly illustrative; order/reservation/subscription views reflect the actual demo activity in this browser. Admin discount campaigns and BLOOM10 use the shared checkout pricing logic. No authentication, backend, card fields, real transactions, real messages or real hardware. Use fictional form values. Newsletter and corporate forms are local simulations. Privacy controls reset all demo business data.
 
@@ -61,3 +61,45 @@ The GitHub environment permits `gh-pages` and rejects `main`. The workflow there
 ## Published preview
 
 ![Published Christmas homepage](docs/preview/christmas-home.jpg)
+
+## Premium discovery update
+
+Desktop navigation uses a dedicated discovery row and a labeled Styles control with the current theme and palette. All 15 themes remain available, with searchable/favorite/recent choices and identical-content comparisons at simulated 1440px and 390px widths. Pickup discovery filters the shared catalog by method and planned location; maintenance hides vending stock and blocks local reservations. No business address or live stock is invented. Ten original LV/RU/EN guides and a service explanation page connect the catalog, gifting and pickup flows.
+
+The gift atelier links to dedicated wreath and Advent calendar builders. They use the shared product inventory, size pricing, wrapping, greeting cards, dates and cart. Calendar concepts support 24 personal messages/activities; physical contents are excluded. Changes are schematic previews; reference photography does not depict a configured final item. Notes survive reload up to 4,000 characters. Catalog migration adds the 38 new SKUs without replenishing depleted existing batches.
+
+Admin → Experience studio controls local pickup availability, editorial visibility/notes, FAQ and style previews. Admin → Catalog tools exports/imports JSON for known product IDs and previews bulk price changes before applying them. Imports validate the entire batch, all three translations, unique known IDs and prices €1–€500 before any update. These tools affect this browser only; no server or authenticated business administration is implied.
+
+## Complete Christmas commerce extension
+
+The catalog now contains 157 seasonal concepts plus 36 preserved flower/gift products. The eight primary seasonal categories meet the requested 20/20/20/20/20/20/15/15 distribution, with seven additional physical Advent calendar concepts. Stable IDs xm-001 through xm-150 and fp-1 through fp-36 remain intact. Preparation days, natural/decorative materials and readiness concepts accompany seasonal metadata.
+
+New primary routes: `/gift-studio` (Gift Builder 2.0), `/wrapping-studio`, `/wreath-builder`, `/advent-builder`, `/gift-finder`, `/christmas-collections`, `/last-minute`, `/wishlists`, `/christmas-preorders`, `/corporate-christmas`, `/order-confidence`. The existing `/christmas-builder`, Flower Match, digital Advent calendar and all prior routes remain accessible. A shared configuration quote feeds variantPrice and cartTotals. Atomic multi-product additions validate the complete bundle before updating inventory-facing cart state. Physical calendars require 24 compatible filled days. Configurator drafts and validated product/admin changes use the existing versioned browser repository.
+
+Admin → Christmas operations includes translated product editing, creation from an existing concept, reversible deletion, lifecycle/visibility/category/seasonal bulk edits, price previews, schema-validated CSV import/export with duplicate detection and rollback, bundled image metadata/assignment, missing/repeated image diagnostics, seasonal slot capacity/cutoffs, material assumptions linked to the existing profitability model, corporate inquiries, local event counts, order preparation statuses and editable announcement/countdown settings. Existing inventory, waste, maintenance, discounts and campaign ordering remain separate working modules.
+
+Privacy and production boundaries: wishlist share URLs contain a bounded snapshot of product IDs and a generic title, not synchronized user state. Use fictional corporate contact details at example.com/org/net. Food, cosmetic, candle and decorative-toy contents are concepts requiring supplier/safety verification. Local order photo uploads live only in memory; a stock photo is never labeled as a prepared order. Slots use Europe/Riga dates and are not delivery promises. There are no real payments, authentication, business submissions, external AI, messages or analytics services. Material costs and corporate quotes are demo assumptions, not commercial offers. Product status is internal planning, separate from inventory readiness.
+
+Browser coverage captures representative 390px and 1440px screenshots as a separate CI artifact, and exercises commerce layouts at 320, 375, 390, 430, 768, 1024, 1280, 1440 and 1920px. Deploy remains through the existing GitHub Pages workflow after an authorized merge to main; a pull request run only validates and packages.
+
+### Countdown and visual refinement (October 2026)
+
+The seasonal homepage uses a shared four-unit countdown (`HolidayCountdown.tsx`)
+with tabular numerals, a one-second clock, visibility/pageshow resynchronization,
+and complete cleanup on unmount. The default target is **24 December 2026,
+00:00 Europe/Riga** (23 December, 22:00 UTC), independent of visitor timezone.
+`countdown.ts` resolves local wall-clock times using IANA timezone rules and
+rejects skipped/ambiguous DST times and invalid calendar dates. Expiration
+shows the configured greeting; it does not change holiday automatically.
+Christmas operations → Campaign lets the demo admin choose a Christmas/New Year
+preset or a date within the current 2026/2027 campaign, and edit all three
+localized event labels and greetings. Existing saved milestone settings migrate.
+
+`refinements.css` provides semantic seasonal surfaces, grouped countdown units,
+readable product metadata and 44px card actions, mobile safe-area clearance,
+and dialog-aware bottom navigation. Quick view reuses the existing product
+editor through a lazy import. Original colors and all 14 additional palettes
+remain available. Responsive regression coverage includes the nine requested
+widths, Riga/New York/Tokyo clocks, configurable expiration, all 15 themes and
+390px/1440px screenshots in the existing CI screenshot artifact. Everything
+continues to be a browser-local demo; no live commerce integrations were added.

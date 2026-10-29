@@ -1,6 +1,8 @@
+import type { CommerceState, DesignConfig } from "./commerce-model";
 import type { SeasonalState } from "./seasonal-state";
 import type { Lang, Product } from "./data";
 export interface ProductOptions {
+  configuration?: DesignConfig;
   size: "S" | "M" | "L";
   color: number;
   wrapping: "ivory" | "kraft" | "rose";
@@ -8,6 +10,8 @@ export interface ProductOptions {
   extraGift: boolean;
   method: "pickup" | "delivery";
   date?: string;
+  time?: string;
+  locationId?: string;
 }
 export interface CartItem {
   id: string;
@@ -17,8 +21,10 @@ export interface CartItem {
   options?: ProductOptions;
 }
 export interface Reservation {
+  configuration?: DesignConfig;
+  quotedTotal?: number;
   quantity?: number;
-  wrapping?:string;
+  wrapping?: string;
   id: string;
   product: string;
   date: string;
@@ -41,6 +47,7 @@ export interface Reminder {
   dismissed?: boolean;
 }
 export interface Order {
+  locationId?: string;
   id: string;
   date: string;
   time?: string;
@@ -178,6 +185,7 @@ export interface Costs {
 export interface DemoState {
   schemaVersion: 2;
   seasonal: SeasonalState;
+  commerce: CommerceState;
   lang: Lang;
   dark: boolean;
   cart: CartItem[];

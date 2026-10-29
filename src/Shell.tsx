@@ -16,6 +16,35 @@ import { pick, type Text } from "./data";
 import { useStore } from "./store";
 import { useT } from "./ui";
 const labels: Record<string, Text> = {
+  "/gift-studio": ["Dāvanas 2.0", "Подарки 2.0", "Gift Builder 2.0"],
+  "/wrapping-studio": [
+    "Iesaiņošanas studija",
+    "Студия упаковки",
+    "Wrapping Studio",
+  ],
+  "/gift-finder": ["Dāvanu meklētājs", "Подбор подарков", "Gift Finder"],
+  "/wishlists": ["Vēlmju saraksti", "Списки желаний", "Wishlists"],
+  "/last-minute": ["Ātrās dāvanas", "Быстрые подарки", "Last-minute gifts"],
+  "/christmas-collections": [
+    "Svētku kolekcijas",
+    "Праздничные коллекции",
+    "Christmas Collections",
+  ],
+  "/christmas-preorders": ["Priekšpasūtījumi", "Предзаказы", "Preorders"],
+  "/corporate-christmas": ["Uzņēmumiem", "Компаниям", "Corporate Christmas"],
+  "/order-confidence": ["Sagatavošana", "Подготовка", "Order Preparation"],
+  "/wreath-builder": [
+    "Vainaga konstruktors",
+    "Конструктор венка",
+    "Wreath builder",
+  ],
+  "/advent-builder": [
+    "Adventes kalendāra konstruktors",
+    "Конструктор адвент-календаря",
+    "Advent calendar builder",
+  ],
+  "/how-it-works": ["Kā tas darbojas", "Как это работает", "How it works"],
+  "/guides": ["Ceļveži", "Статьи", "Guides"],
   "/christmas": ["Ziemassvētki 2026", "Рождество 2026", "Christmas 2026"],
   "/christmas-builder": [
     "Svētku dāvanu komplekts",
@@ -154,7 +183,7 @@ export function MobileNavigation() {
           {
             url: "/available",
             icon: <Clock3 size={20} />,
-            label: t("Tagad", "Сейчас", "Ready now"),
+            label: t("Pieejams", "В наличии", "Ready now"),
           },
           {
             url: "/cart",
@@ -164,7 +193,7 @@ export function MobileNavigation() {
           {
             url: "/discover",
             icon: <Compass size={20} />,
-            label: t("Atklāj", "Открыть", "Discover"),
+            label: t("Atklāj", "Обзор", "Explore"),
           },
         ].map((x) => (
           <Link

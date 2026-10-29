@@ -1,3 +1,5 @@
+import { PickupSelection } from "./Pickup";
+import { locationMatches, pickupLocations } from "./pickup";
 import { HolidayPersonalization } from "./SeasonalCommerce";
 import { filterCatalog } from "./catalog";
 import { InterestButton } from "./Seasonal";
@@ -95,8 +97,10 @@ function Catalog() {
       size: params.get("size") || "",
       giftReady: params.get("giftReady") === "1",
       method: params.get("method") || "",
+      locationId: params.get("location") || "",
     },
     s.lang,
+    s,
   )
     .filter(
       (p) =>
@@ -197,6 +201,36 @@ function Catalog() {
       </div>
       <div className="catalog-layout">
         <aside className={filters ? "filters visible" : "filters"}>
+          <PickupSelection
+            value={params.get("location") || ""}
+            onChange={(id) => update("location", id)}
+          />
+          <label>
+            {t("Saņemšanas veids", "Способ получения", "Fulfilment method")}
+            <select
+              value={params.get("method") || ""}
+              onChange={(e) => update("method", e.target.value)}
+            >
+              <option value="">{t("Visi", "Все", "All")}</option>
+              <option value="vending">
+                {t("Demo automāts", "Демо-автомат", "Demo vending")}
+              </option>
+              <option value="pickup">
+                {t(
+                  "Florists · Koncepts",
+                  "Флорист · Концепция",
+                  "Florist · Concept",
+                )}
+              </option>
+              <option value="delivery">
+                {t(
+                  "Piegāde · Koncepts",
+                  "Доставка · Концепция",
+                  "Delivery · Concept",
+                )}
+              </option>
+            </select>
+          </label>
           <label>
             {t("Pieejamība", "Доступность", "Availability")}
             <select
@@ -508,6 +542,9 @@ function ProductContent({
   const [color, setColor] = useState(p.color);
   const [wrap, setWrap] = useState<ProductOptions["wrapping"]>("ivory");
   const [method, setMethod] = useState<"pickup" | "delivery">("pickup");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("12:00–15:00");
+  const [locationId, setLocationId] = useState("dvp-studio");
   const options: ProductOptions = {
     size,
     color,
@@ -515,6 +552,9 @@ function ProductContent({
     card,
     extraGift: false,
     method,
+    date: date || undefined,
+    time,
+    locationId,
   };
   const [personalization, setPersonalization] = useState("");
   const price = variantPrice(p, options);
@@ -672,9 +712,12 @@ function ProductContent({
             {t("Saņemšanas izvēle", "Выбор получения", "Fulfilment option")}
             <select
               value={method}
-              onChange={(e) =>
-                setMethod(e.target.value as "pickup" | "delivery")
-              }
+              onChange={(e) => {
+                setMethod(e.target.value as "pickup" | "delivery");
+                setLocationId(
+                  e.target.value === "delivery" ? "dvp-delivery" : "dvp-studio",
+                );
+              }}
             >
               <option value="pickup">
                 {t("Saņemšana", "Самовывоз", "Pickup")}
@@ -689,6 +732,35 @@ function ProductContent({
             </select>
           </label>
         </div>{" "}
+        <PickupSelection
+          value={locationId}
+          productId={p.id}
+          onChange={(id) => {
+            setLocationId(id);
+            setMethod(id === "dvp-delivery" ? "delivery" : "pickup");
+          }}
+        />
+        <div className="form-grid purchase-schedule">
+          <label>
+            {t("Vēlamais datums", "Желаемая дата", "Preferred date")}
+            <input
+              type="date"
+              min={future(1)}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </label>
+          <label>
+            {t("Vēlamais laiks", "Желаемое время", "Preferred time")}
+            <select value={time} onChange={(e) => setTime(e.target.value)}>
+              {["09:00–12:00", "12:00–15:00", "15:00–18:00", "18:00–21:00"].map(
+                (x) => (
+                  <option key={x}>{x}</option>
+                ),
+              )}
+            </select>
+          </label>
+        </div>
         {p.seasonal && (
           <HolidayPersonalization p={p} onChange={setPersonalization} />
         )}
@@ -732,7 +804,12 @@ function ProductContent({
           </div>
           <button
             className="btn"
-            disabled={availability(s, p.id).quantity < 1}
+            disabled={
+              availability(s, p.id).quantity < 1 ||
+              locationId === "dvp-vending-01" ||
+              !locationMatches(s, p.id, locationId) ||
+              (!!date && date < future(1))
+            }
             onClick={() => {
               if (
                 add(
@@ -869,6 +946,23 @@ function Cart() {
                     </Link>
                     <span>{money(linePrice(x, s.catalog), s.lang)}</span>
                     {x.note && <p className="muted">{x.note}</p>}
+                    {x.options?.locationId && (
+                      <p className="cart-fulfilment">
+                        {pick(
+                          pickupLocations.find(
+                            (l) => l.id === x.options?.locationId,
+                          )?.name || [
+                            "Saņemšana · Demo",
+                            "Получение · Демо",
+                            "Collection · Demo",
+                          ],
+                          s.lang,
+                        )}
+                        {x.options.date && ` · ${x.options.date}`}
+                        {x.options.time && ` · ${x.options.time}`}
+                      </p>
+                    )}
+
                     <div className="quantity">
                       <IconButton
                         label={t("Samazināt", "Уменьшить", "Decrease")}
@@ -1026,6 +1120,11 @@ function Checkout() {
       ? "delivery"
       : "pickup",
   );
+  const [locationId, setLocationId] = useState(
+    s.cart[0]?.options?.locationId === "dvp-delivery"
+      ? "dvp-delivery"
+      : "dvp-studio",
+  );
   const [confirmed, setConfirmed] = useState("");
   const [error, setError] = useState("");
   const totals = cartTotals(s, method);
@@ -1105,6 +1204,16 @@ function Checkout() {
             form.reportValidity();
             return;
           }
+          if (s.cart.some((item) => !locationMatches(s, item.id, locationId))) {
+            setError(
+              t(
+                "Šis saņemšanas veids nav demo-pieejams.",
+                "Этот способ получения недоступен в демо.",
+                "This fulfilment option is unavailable in the demo.",
+              ),
+            );
+            return;
+          }
           const counts = new Map<string, number>();
           s.cart.forEach((x) =>
             counts.set(x.id, (counts.get(x.id) || 0) + x.qty),
@@ -1136,6 +1245,7 @@ function Checkout() {
                     total,
                     items: o.cart,
                     method,
+                    locationId,
                   },
                 ],
                 cart: [],
@@ -1189,7 +1299,12 @@ function Checkout() {
                 type="button"
                 className={`choice ${method === m ? "selected" : ""}`}
                 key={m}
-                onClick={() => setMethod(m)}
+                onClick={() => {
+                  setMethod(m);
+                  setLocationId(
+                    m === "delivery" ? "dvp-delivery" : "dvp-studio",
+                  );
+                }}
               >
                 {m === "pickup"
                   ? t(
@@ -1201,6 +1316,14 @@ function Checkout() {
               </button>
             ))}
           </div>
+          <PickupSelection
+            checkout
+            value={locationId}
+            onChange={(id) => {
+              setLocationId(id || "dvp-studio");
+              setMethod(id === "dvp-delivery" ? "delivery" : "pickup");
+            }}
+          />
           {method === "delivery" && (
             <label>
               {t(
@@ -1224,12 +1347,20 @@ function Checkout() {
                 required
                 type="date"
                 min={future(1)}
-                defaultValue={future(1)}
+                defaultValue={
+                  s.cart[0]?.options?.date &&
+                  s.cart[0].options.date >= future(1)
+                    ? s.cart[0].options.date
+                    : future(1)
+                }
               />
             </label>
             <label>
               {t("Vēlamais laiks", "Желаемое время", "Preferred time")}
-              <select name="time">
+              <select
+                name="time"
+                defaultValue={s.cart[0]?.options?.time || "09:00–12:00"}
+              >
                 <option>09:00–12:00</option>
                 <option>12:00–15:00</option>
                 <option>15:00–18:00</option>

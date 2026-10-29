@@ -21,9 +21,12 @@ export function HolidayPersonalization({
   const detail = p.seasonal!;
   const labels = useMemo(
     () => ({
-      kraft: pick(["Dabīgs krafts", "Натуральный крафт", "Natural kraft"],s.lang),
-      ivory: pick(["Ziloņkauls", "Слоновая кость", "Ivory"],s.lang),
-      burgundy: pick(["Bordo", "Бордо", "Burgundy"],s.lang),
+      kraft: pick(
+        ["Dabīgs krafts", "Натуральный крафт", "Natural kraft"],
+        s.lang,
+      ),
+      ivory: pick(["Ziloņkauls", "Слоновая кость", "Ivory"], s.lang),
+      burgundy: pick(["Bordo", "Бордо", "Burgundy"], s.lang),
     }),
     [s.lang],
   );
@@ -175,6 +178,22 @@ export default function ChristmasGiftBuilder() {
         )}
       />
       <Demo />
+      <div className="atelier-links">
+        <Link className="btn outline" to="/wreath-builder">
+          {t(
+            "Izveidot Adventes vainagu",
+            "Создать адвентский венок",
+            "Create an Advent wreath",
+          )}
+        </Link>
+        <Link className="btn outline" to="/advent-builder">
+          {t(
+            "Izveidot Adventes kalendāru",
+            "Создать адвент-календарь",
+            "Create an Advent calendar",
+          )}
+        </Link>
+      </div>
       <div className="holiday-builder-grid">
         <section className="panel form-panel">
           <div className="form-grid">

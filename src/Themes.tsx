@@ -4,9 +4,18 @@ import {
   useEffect,
   useLayoutEffect,
   useState,
+  useRef,
   type ReactNode,
 } from "react";
-import { Check, Heart, Palette, RotateCcw, Search, X } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Heart,
+  Palette,
+  RotateCcw,
+  Search,
+  X,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { themes, themeById, themeTokens } from "./themes";
 import type { VisualTheme } from "./themes";
@@ -106,14 +115,21 @@ function Swatches({ theme }: { theme: VisualTheme }) {
   );
 }
 export function ThemeSwitcher() {
-  const { state, apply } = useThemes();
+  const { state } = useThemes();
   const t = useT();
   const [open, setOpen] = useState(false);
+  const theme = themeById(state.current);
   return (
     <>
       <button
         className="theme-switcher icon-btn"
         aria-haspopup="dialog"
+        aria-expanded={open}
+        title={t(
+          "Izvēlies vietnes dizainu",
+          "Выберите стиль сайта",
+          "Choose your website style",
+        )}
         aria-label={t(
           "Izvēlēties dizainu",
           "Выбрать дизайн",
@@ -122,56 +138,22 @@ export function ThemeSwitcher() {
         onClick={() => setOpen(true)}
       >
         <Palette size={19} />
-        <span>{themeById(state.current).name.split(" /")[0]}</span>
+        <span className="theme-control-label">
+          {t("Stili", "Стили", "Styles")} <b>· {theme.name.split(" /")[0]}</b>
+        </span>
+        <Swatches theme={theme} />
+        <ChevronDown size={14} className="theme-chevron" />
       </button>
       {open && (
         <Modal
           title={t(
-            "Tava dizaina noskaņa",
-            "Ваше настроение дизайна",
-            "Your design mood",
+            "Izvēlies savas vietnes stilu",
+            "Выберите стиль сайта",
+            "Choose your website style",
           )}
           close={() => setOpen(false)}
         >
-          <p className="muted">
-            {t(
-              "Dizains mainās uzreiz. Grozs un valoda saglabājas.",
-              "Дизайн меняется мгновенно. Корзина и язык сохраняются.",
-              "Instant visual changes. Your bag and language stay with you.",
-            )}
-          </p>
-          <div className="theme-picker">
-            {themes.map((th) => (
-              <button
-                key={th.id}
-                className={th.id === state.current ? "selected" : ""}
-                aria-pressed={th.id === state.current}
-                onClick={() => {
-                  apply(th.id);
-                  setOpen(false);
-                }}
-              >
-                <Swatches theme={th} />
-                <span>{th.name}</span>
-                {th.id === state.current && <Check size={17} />}
-              </button>
-            ))}
-          </div>
-          <div className="row-between">
-            <button
-              className="text-link"
-              onClick={() => {
-                apply("original");
-                setOpen(false);
-              }}
-            >
-              <RotateCcw size={15} />
-              {t("Sākotnējais dizains", "Исходный дизайн", "Reset to Original")}
-            </button>
-            <Link className="btn" to="/themes" onClick={() => setOpen(false)}>
-              {t("Dizainu galerija", "Галерея тем", "Theme Gallery")}
-            </Link>
-          </div>
+          <ThemeGallery compact onApply={() => setOpen(false)} />
         </Modal>
       )}
     </>
@@ -254,7 +236,13 @@ function ThemeSample({
     </div>
   );
 }
-export default function ThemeGallery() {
+export default function ThemeGallery({
+  compact = false,
+  onApply,
+}: {
+  compact?: boolean;
+  onApply?: () => void;
+}) {
   const t = useT();
   const { s } = useStore();
   const { state, apply, favorite } = useThemes();
@@ -262,6 +250,7 @@ export default function ThemeGallery() {
   const [category, setCategory] = useState("all");
   const [compared, setCompared] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [viewport, setViewport] = useState<1440 | 390>(1440);
   const cats = [
     ["all", t("Visi", "Все", "All")],
     ["floral", t("Romantiski", "Романтика", "Floral")],
@@ -283,20 +272,33 @@ export default function ThemeGallery() {
         .includes(q.toLowerCase()),
   );
   return (
-    <div className="page theme-gallery">
-      <Title
-        kicker="FLOWER PARADISE · DESIGN ATELIER"
-        title={t(
-          "Viena paradīze. Tavs noskaņojums.",
-          "Один Paradise. Ваше настроение.",
-          "One paradise. Your kind of beautiful.",
-        )}
-        description={t(
-          "15 dizaini vienam veikalam. Salīdzini vienādu saturu, izvēlies savu un turpini iepirkties.",
-          "15 дизайнов одного магазина. Сравните одинаковое содержимое и выберите свой.",
-          "15 distinct designs for one boutique. Compare identical content, choose a mood and keep exploring.",
-        )}
-      />
+    <div
+      className={compact ? "theme-gallery theme-panel" : "page theme-gallery"}
+    >
+      {!compact && (
+        <Title
+          kicker="FLOWER PARADISE · DESIGN ATELIER"
+          title={t(
+            "Viena paradīze. Tavs noskaņojums.",
+            "Один Paradise. Ваше настроение.",
+            "One paradise. Your kind of beautiful.",
+          )}
+          description={t(
+            "15 dizaini vienam veikalam. Salīdzini vienādu saturu, izvēlies savu un turpini iepirkties.",
+            "15 дизайнов одного магазина. Сравните одинаковое содержимое и выберите свой.",
+            "15 distinct designs for one boutique. Compare identical content, choose a mood and keep exploring.",
+          )}
+        />
+      )}
+      {compact && (
+        <p className="muted">
+          {t(
+            "Dizains mainās uzreiz. Grozs un valoda saglabājas.",
+            "Дизайн меняется мгновенно. Корзина и язык сохраняются.",
+            "Instant style changes. Your page, bag and language stay with you.",
+          )}
+        </p>
+      )}
       <div className="theme-tools">
         <label>
           <Search size={17} />
@@ -307,7 +309,13 @@ export default function ThemeGallery() {
             onChange={(e) => setQ(e.target.value)}
           />
         </label>
-        <button className="btn outline" onClick={() => apply("original")}>
+        <button
+          className="btn outline"
+          onClick={() => {
+            apply("original");
+            onApply?.();
+          }}
+        >
           <RotateCcw size={16} />
           {t("Sākotnējais", "Исходный", "Reset to Original")}
         </button>
@@ -376,7 +384,15 @@ export default function ThemeGallery() {
                 <button
                   className="btn"
                   aria-pressed={state.current === th.id}
-                  onClick={() => apply(th.id)}
+                  aria-label={
+                    compact
+                      ? `${th.name} · ${t("Lietot dizainu", "Применить", "Apply Theme")}`
+                      : undefined
+                  }
+                  onClick={() => {
+                    apply(th.id);
+                    onApply?.();
+                  }}
                 >
                   {state.current === th.id ? (
                     <Check size={16} />
@@ -387,28 +403,39 @@ export default function ThemeGallery() {
                     ? t("Izvēlēts", "Выбрано", "Applied")
                     : t("Lietot dizainu", "Применить", "Apply Theme")}
                 </button>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={compared.includes(th.id)}
-                    disabled={
-                      compared.length === 3 && !compared.includes(th.id)
-                    }
-                    onChange={() =>
-                      setCompared((o) =>
-                        o.includes(th.id)
-                          ? o.filter((x) => x !== th.id)
-                          : [...o, th.id],
-                      )
-                    }
-                  />
-                  {t("Salīdzināt", "Сравнить", "Compare")}
-                </label>
+                {!compact && (
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={compared.includes(th.id)}
+                      disabled={
+                        compared.length === 3 && !compared.includes(th.id)
+                      }
+                      onChange={() =>
+                        setCompared((o) =>
+                          o.includes(th.id)
+                            ? o.filter((x) => x !== th.id)
+                            : [...o, th.id],
+                        )
+                      }
+                    />
+                    {t("Salīdzināt", "Сравнить", "Compare")}
+                  </label>
+                )}
               </div>
             </div>
           </article>
         ))}
       </div>
+      {compact && (
+        <Link className="btn outline full" to="/themes" onClick={onApply}>
+          {t(
+            "Atvērt galeriju un salīdzināt",
+            "Галерея и сравнение тем",
+            "Open gallery & compare themes",
+          )}
+        </Link>
+      )}
       {list.length === 0 && (
         <div className="empty">
           <Search />
@@ -439,13 +466,43 @@ export default function ThemeGallery() {
           )}
           close={() => setCompareOpen(false)}
         >
+          <div
+            className="preview-toolbar"
+            role="group"
+            aria-label={t(
+              "Priekšskatījuma izmērs",
+              "Размер предпросмотра",
+              "Preview viewport",
+            )}
+          >
+            {[1440, 390].map((v) => (
+              <button
+                key={v}
+                className="btn outline"
+                aria-pressed={viewport === v}
+                onClick={() => setViewport(v as 1440 | 390)}
+              >
+                {v === 1440
+                  ? t("Dators", "Компьютер", "Desktop")
+                  : t("Tālrunis", "Телефон", "Mobile")}{" "}
+                · {v}px
+              </button>
+            ))}
+            <span className="muted">
+              {t(
+                "Mērogoti dzīvi komponenti",
+                "Масштабируемые живые компоненты",
+                "Scaled live components",
+              )}
+            </span>
+          </div>
           <div className="theme-compare-grid">
             {compared.map((id) => {
               const th = themeById(id);
               return (
                 <section key={id}>
                   <h3>{th.name}</h3>
-                  <ThemeSample theme={th} full />
+                  <ResponsiveThemePreview theme={th} viewport={viewport} />
                   <button className="btn" onClick={() => apply(id)}>
                     {t("Lietot dizainu", "Применить тему", "Apply Theme")}
                   </button>
@@ -455,6 +512,163 @@ export default function ThemeGallery() {
           </div>
         </Modal>
       )}
+    </div>
+  );
+}
+
+function ResponsiveThemePreview({
+  theme,
+  viewport,
+}: {
+  theme: VisualTheme;
+  viewport: 1440 | 390;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(300);
+  const t = useT();
+  const { s } = useStore();
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const r = new ResizeObserver((entries) =>
+      setWidth(entries[0].contentRect.width),
+    );
+    r.observe(el);
+    return () => r.disconnect();
+  }, []);
+  const scale = Math.min(1, width / viewport);
+  const mobile = viewport === 390;
+  return (
+    <div
+      ref={ref}
+      className="responsive-theme-preview"
+      style={{ height: (mobile ? 1590 : 1090) * scale }}
+    >
+      <div
+        className={`live-theme-preview detail-${theme.detail} ${mobile ? "mobile-preview" : ""}`}
+        style={{
+          ...themeTokens(theme),
+          width: viewport,
+          transform: `scale(${scale})`,
+        }}
+      >
+        <div className="live-header">
+          <strong>❋ FLOWER PARADISE</strong>
+          <span>
+            {t(
+              "Ziemassvētki · Ziedi · Saņemšana",
+              "Рождество · Цветы · Получение",
+              "Christmas · Flowers · Pickup",
+            )}
+          </span>
+          <Palette />
+        </div>
+        <div className="live-hero">
+          <div>
+            <small>CHRISTMAS 2026 · NEW YEAR 2027</small>
+            <h3>
+              {t(
+                "Mazliet brīnuma. No sirds.",
+                "Немного чуда. От всего сердца.",
+                "A little wonder. From the heart.",
+              )}
+            </h3>
+            <p>
+              {t(
+                "Pārdomātas dāvanas un ziedi katram mirklim.",
+                "Продуманные подарки и цветы для тёплых моментов.",
+                "Thoughtful gifts and flowers for the moments that matter.",
+              )}
+            </p>
+            <span className="sample-button">
+              {t("Atklāt kolekciju", "Открыть коллекцию", "Explore collection")}
+            </span>
+            <span className="sample-button secondary">
+              {t("Kā tas darbojas", "Как это работает", "How it works")}
+            </span>
+          </div>
+          <img
+            src={`${import.meta.env.BASE_URL}seasonal/christmas-hero-small.webp`}
+            alt=""
+          />
+        </div>
+        <div className="live-search">
+          ⌕ <span>{t("Meklēt dāvanu…", "Найти подарок…", "Find a gift…")}</span>
+          <span>
+            {t(
+              "Kategorija · Cena · Saņemšana",
+              "Категория · Цена · Получение",
+              "Category · Price · Pickup",
+            )}
+          </span>
+        </div>
+        <div className="live-content">
+          <div className="live-products">
+            {[s.catalog.find((p) => p.id === "xm-001")!, s.catalog[0]].map(
+              (p) => (
+                <div className="live-product" key={p.id}>
+                  <img src={img(p.photo)} alt="" loading="lazy" />
+                  <small>
+                    {p.seasonal ? "CHRISTMAS 2026" : "FLOWER ATELIER"} · DEMO
+                  </small>
+                  <h4>{pick(p.name, s.lang)}</h4>
+                  <b>{money(p.price, s.lang)}</b>
+                  <span className="sample-button">
+                    {t("Pievienot", "В корзину", "Add to bag")}
+                  </span>
+                </div>
+              ),
+            )}
+          </div>
+          <div className="live-detail">
+            <h4>
+              {t(
+                "Detaļas, kas nozīmē vairāk",
+                "Детали со смыслом",
+                "Details that mean more",
+              )}
+            </h4>
+            <p>
+              {t(
+                "Samta lente · Dāvanu iesaiņojums · Personalizācija",
+                "Бархатная лента · Подарочная упаковка · Персонализация",
+                "Velvet ribbon · Gift wrapping · Personalization",
+              )}
+            </p>
+            <label>
+              {t("Dāvanas ziņa", "Послание", "Gift message")}
+              <input
+                readOnly
+                value={t(
+                  "Tev, ar mīlestību",
+                  "Тебе, с любовью",
+                  "For you, with love",
+                )}
+                tabIndex={-1}
+              />
+            </label>
+            <div className="sample-summary">
+              <span>
+                {t(
+                  "Grozs · 2 produkti",
+                  "Корзина · 2 товара",
+                  "Bag · 2 products",
+                )}
+              </span>
+              <b>{money(65, s.lang)}</b>
+            </div>
+            <div className="sample-dashboard">
+              <small>{t("MANS PROFILS", "МОЙ КАБИНЕТ", "MY DASHBOARD")}</small>
+              <h4>
+                {t("Nākamā dāvana", "Следующий подарок", "Your next gift")}
+              </h4>
+              <span>
+                25.12.2026 · {t("Plānots", "Запланировано", "Planned")}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

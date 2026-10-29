@@ -11,6 +11,7 @@ import "./style.css";
 import "./features.css";
 import "./themes.css";
 import "./seasonal.css";
+import "./ux.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <HashRouter>

@@ -21,6 +21,13 @@ export interface NotificationEntry {
   date: string;
 }
 export interface SeasonalState {
+  discovery: {
+    defaultTheme: string;
+    unavailableLocations: string[];
+    hiddenArticles: string[];
+    articleNotes: Record<string, Text>;
+    faqAnswer: Text | null;
+  };
   campaign: {
     enabled: boolean;
     start: string;
@@ -48,6 +55,13 @@ export interface SeasonalState {
   };
 }
 export const seasonalDefaults = (): SeasonalState => ({
+  discovery: {
+    defaultTheme: "original",
+    unavailableLocations: [],
+    hiddenArticles: [],
+    articleNotes: {},
+    faqAnswer: null,
+  },
   campaign: {
     enabled: true,
     start: "2026-10-01",
@@ -231,6 +245,32 @@ export function migrateSeasonal(raw: unknown): SeasonalState {
             .slice(-50)
         : [],
     };
+  }
+  if (x.discovery) {
+    const v = x.discovery;
+    if (typeof v.defaultTheme === "string")
+      d.discovery.defaultTheme = v.defaultTheme.slice(0, 40);
+    for (const key of ["unavailableLocations", "hiddenArticles"] as const)
+      if (Array.isArray(v[key]))
+        d.discovery[key] = v[key]
+          .filter((id) => typeof id === "string")
+          .slice(0, 30);
+    if (v.articleNotes && typeof v.articleNotes === "object")
+      for (const [id, note] of Object.entries(v.articleNotes))
+        if (
+          Array.isArray(note) &&
+          note.length === 3 &&
+          note.every((n) => typeof n === "string")
+        )
+          d.discovery.articleNotes[id] = note.map((n) =>
+            n.slice(0, 2000),
+          ) as Text;
+    if (
+      Array.isArray(v.faqAnswer) &&
+      v.faqAnswer.length === 3 &&
+      v.faqAnswer.every((n) => typeof n === "string")
+    )
+      d.discovery.faqAnswer = v.faqAnswer.map((n) => n.slice(0, 2000)) as Text;
   }
   return d;
 }

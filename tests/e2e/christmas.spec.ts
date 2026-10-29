@@ -11,25 +11,25 @@ test.beforeEach(async ({ page }) => {
     "A little wonder.",
   );
 });
-test("Christmas catalog has 112 records, loads efficiently and filters by category and recipient", async ({
+test("Christmas catalog has 150 records, loads efficiently and filters by category and recipient", async ({
   page,
 }) => {
   await route(page, "/christmas");
-  await expect(page.locator(".results")).toContainText("112");
+  await expect(page.locator(".results")).toContainText("150");
   await expect(page.locator(".catalog-products .product-card")).toHaveCount(36);
   await page.getByRole("button", { name: /Show more/ }).click();
   await expect(page.locator(".catalog-products .product-card")).toHaveCount(72);
   await page
     .getByRole("textbox", { name: "Search products", exact: true })
     .fill("gnome");
-  await expect(page.locator(".results")).toContainText("15");
+  await expect(page.locator(".results")).toContainText("19");
   await page
     .getByRole("textbox", { name: "Search products", exact: true })
     .fill("");
   await page
     .getByRole("combobox", { name: "Recipient", exact: true })
     .selectOption("teachers");
-  await expect(page.locator(".results")).toContainText("15");
+  await expect(page.locator(".results")).toContainText("20");
   await route(page, "/shop");
   await expect(page.locator(".catalog-products .product-card")).toHaveCount(36);
 });
@@ -96,9 +96,9 @@ test("all 15 themes switch instantly without losing language or cart and can be 
   await page
     .getByRole("button", { name: "Compare themes", exact: true })
     .click();
-  await expect(page.locator(".theme-compare-grid .theme-sample")).toHaveCount(
-    2,
-  );
+  await expect(
+    page.locator(".theme-compare-grid .live-theme-preview"),
+  ).toHaveCount(2);
   await page
     .getByRole("button", { name: "Close / Aizvērt / Закрыть", exact: true })
     .click();
@@ -120,7 +120,7 @@ test("theme search and favorites work and the header picker opens accessibly", a
     .click();
   await expect(page.locator("dialog")).toBeVisible();
   await page
-    .getByRole("button", { name: "Midnight Bloom", exact: false })
+    .getByRole("button", { name: "Midnight Bloom · Apply Theme", exact: true })
     .click();
   await expect(page.locator("html")).toHaveAttribute(
     "data-visual-theme",

@@ -77,7 +77,8 @@ export function availability(
   s: Pick<
     DemoState,
     "batches" | "freshnessRules" | "compartments" | "reservations"
-  >,
+  > &
+    Partial<Pick<DemoState, "seasonal">>,
   productId: string,
   now = dateKey(),
 ) {
@@ -91,6 +92,7 @@ export function availability(
     .reduce((n, b) => n + b.quantity, 0);
   const slots = s.compartments.filter(
     (c) =>
+      !s.seasonal?.discovery.unavailableLocations.includes("dvp-vending-01") &&
       c.productId === productId &&
       c.status === "available" &&
       s.batches.some(
@@ -431,7 +433,7 @@ export function migrate(raw: unknown, now = dateKey()): DemoState {
     (x.price === undefined || finite(x.price, 0, 10000));
   base.cart = array<CartItem>(raw.cart, validItem).map((x) => ({
     ...x,
-    note: str(x.note) ? x.note.slice(0, 500) : "",
+    note: str(x.note) ? x.note.slice(0, 4000) : "",
     options: validOptions(x.options) ? x.options : undefined,
   }));
   base.wishlist = Array.isArray(raw.wishlist)

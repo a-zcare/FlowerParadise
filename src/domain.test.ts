@@ -33,7 +33,7 @@ describe("versioned demo repository", () => {
     const s = initialState();
     expect(s.schemaVersion).toBe(2);
     expect(s.compartments).toHaveLength(4);
-    expect(s.catalog).toHaveLength(148);
+    expect(s.catalog).toHaveLength(186);
     expect(s.compartments.filter((c) => c.status === "available")).toHaveLength(
       3,
     );

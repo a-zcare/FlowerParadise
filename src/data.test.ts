@@ -13,8 +13,8 @@ import {
 describe("catalog integrity", () => {
   it("has 36 unique products and images across all collections", () => {
     expect(flowerProducts).toHaveLength(36);
-    expect(products).toHaveLength(148);
-    expect(new Set(products.map((p) => p.id)).size).toBe(148);
+    expect(products).toHaveLength(186);
+    expect(new Set(products.map((p) => p.id)).size).toBe(186);
     expect(new Set(photos).size).toBe(36);
     expect(new Set(products.map((p) => p.category)).size).toBe(
       categories.length,

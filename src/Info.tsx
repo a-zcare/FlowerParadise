@@ -253,6 +253,7 @@ function Delivery() {
   );
 }
 function FAQ() {
+  const { s } = useStore();
   const t = useT();
   const rows = [
     [
@@ -367,6 +368,27 @@ function FAQ() {
         )}
       />
       <div className="faq-full">
+        <details>
+          <summary>
+            {t(
+              "Vai pakalpojums jau darbojas?",
+              "Сервис уже работает?",
+              "Is the service already operating?",
+            )}
+          </summary>
+          <p>
+            {s.seasonal.discovery.faqAnswer
+              ? pick(s.seasonal.discovery.faqAnswer, s.lang)
+              : t(
+                  "Vēl ne. Nav uzstādīta automāta vai apstiprinātas adreses. Šis ir pārlūka demo.",
+                  "Пока нет. Автомат не установлен, адрес не подтверждён. Это браузерное демо.",
+                  "Not yet. There is no installed machine or confirmed address. This is a browser demo.",
+                )}
+          </p>
+          <Link to="/how-it-works">
+            {t("Kā tas darbojas", "Как это работает", "How it works")} →
+          </Link>
+        </details>
         {rows.map(([q, a]) => (
           <details key={q}>
             <summary>

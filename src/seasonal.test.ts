@@ -27,18 +27,18 @@ const f = {
 };
 const now = "2026-10-28";
 describe("Christmas catalog and preservation", () => {
-  it("preserves 36 flower records and adds 110 named holiday products plus two physical Advent calendars", () => {
+  it("preserves 36 flower records and adds 150 distinct holiday products across nine collections", () => {
     expect(flowerProducts).toHaveLength(36);
-    expect(holidayProducts).toHaveLength(112);
-    expect(products).toHaveLength(148);
-    expect(new Set(products.map((p) => p.id)).size).toBe(148);
-    expect(new Set(holidayProducts.map((p) => p.name[2])).size).toBe(112);
+    expect(holidayProducts).toHaveLength(150);
+    expect(products).toHaveLength(186);
+    expect(new Set(products.map((p) => p.id)).size).toBe(186);
+    expect(new Set(holidayProducts.map((p) => p.name[2])).size).toBe(150);
     expect(
       Array.from(
         { length: 9 },
         (_, g) => holidayProducts.filter((p) => p.category === 12 + g).length,
       ),
-    ).toEqual([15, 15, 15, 15, 15, 15, 10, 10, 2]);
+    ).toEqual([19, 19, 19, 19, 19, 20, 14, 14, 7]);
   });
   it("supplies all translations, care, safety, materials and images with honest labels", () => {
     for (const p of holidayProducts) {
@@ -62,13 +62,13 @@ describe("Christmas catalog and preservation", () => {
     }
   });
   it("filters holiday and regular flowers through one catalog function", () => {
-    expect(filterCatalog(products, f, "en")).toHaveLength(112);
+    expect(filterCatalog(products, f, "en")).toHaveLength(150);
     expect(
       filterCatalog(products, { ...f, scope: "flowers" }, "en"),
     ).toHaveLength(36);
     expect(
       filterCatalog(products, { ...f, category: "12" }, "ru"),
-    ).toHaveLength(15);
+    ).toHaveLength(19);
     expect(
       filterCatalog(products, { ...f, query: "rūķis" }, "lv").length,
     ).toBeGreaterThan(0);
@@ -239,7 +239,7 @@ describe("Safe seasonal settings", () => {
     const upgraded = migrate(old, now);
     expect(availability(upgraded, "xm-001", now).studio).toBe(5);
     expect(availability(upgraded, "fp-1", now).quantity).toBe(0);
-    expect(upgraded.catalog).toHaveLength(148);
+    expect(upgraded.catalog).toHaveLength(186);
   });
   it("rejects malformed settings, unknown channels and invalid Advent windows", () => {
     const s = migrateSeasonal({

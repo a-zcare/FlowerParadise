@@ -1,3 +1,5 @@
+import CatalogTools from "./CatalogTools";
+import UXAdmin from "./UXAdmin";
 import { SeasonalAdmin, NotificationCenter } from "./Seasonal";
 import {
   ArrowUpRight,
@@ -929,6 +931,14 @@ function Admin() {
   const [notice, setNotice] = useState(false);
   const tabs = [
     [
+      "experience",
+      t("Pieredzes studija", "Студия интерфейса", "Experience studio"),
+    ],
+    [
+      "catalog-tools",
+      t("Kataloga rīki", "Инструменты каталога", "Catalog tools"),
+    ],
+    [
       "christmas",
       t("Ziemassvētku studija", "Рождественская студия", "Christmas studio"),
     ],
@@ -1005,7 +1015,7 @@ function Admin() {
             "FLOWER PARADISE · БИЗНЕС-СТУДИЯ",
             "FLOWER PARADISE · BUSINESS STUDIO",
           )}
-          title={tabs.find((x) => x[0] === tab)![1]}
+          title={(tabs.find((x) => x[0] === tab) || tabs[0])[1]}
           description={t(
             "Ilustratīvi paraugu dati un šīs pārlūkprogrammas demo darbības. Nav īstu pārdošanas rezultātu.",
             "Иллюстративные данные и демо-действия в этом браузере. Это не реальные продажи.",
@@ -1013,7 +1023,11 @@ function Admin() {
           )}
         />
         <Demo />
-        {tab === "christmas" ? (
+        {tab === "catalog-tools" ? (
+          <CatalogTools />
+        ) : tab === "experience" ? (
+          <UXAdmin />
+        ) : tab === "christmas" ? (
           <SeasonalAdmin />
         ) : tab === "notifications" ? (
           <NotificationCenter />

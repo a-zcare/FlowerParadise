@@ -1,3 +1,5 @@
+import type { DemoState } from "./models";
+import { locationMatches } from "./pickup";
 import { categories, pick, type Lang, type Product } from "./data";
 export interface CatalogFilters {
   scope: "flowers" | "holiday" | "all";
@@ -13,11 +15,13 @@ export interface CatalogFilters {
   size?: string;
   giftReady?: boolean;
   method?: string;
+  locationId?: string;
 }
 export function filterCatalog(
   products: Product[],
   f: CatalogFilters,
   lang: Lang,
+  state?: DemoState,
 ) {
   return products.filter(
     (p) =>
@@ -42,6 +46,8 @@ export function filterCatalog(
           : f.size === "large"
             ? p.size.startsWith("45")
             : p.size.startsWith("30"))) &&
-      (!f.method || ["pickup", "delivery"].includes(f.method)),
+      (state
+        ? locationMatches(state, p.id, f.locationId, f.method)
+        : !f.method || ["pickup", "delivery"].includes(f.method)),
   );
 }

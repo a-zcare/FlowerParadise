@@ -16,6 +16,18 @@ import { pick, type Text } from "./data";
 import { useStore } from "./store";
 import { useT } from "./ui";
 const labels: Record<string, Text> = {
+  "/wreath-builder": [
+    "Vainaga konstruktors",
+    "Конструктор венка",
+    "Wreath builder",
+  ],
+  "/advent-builder": [
+    "Adventes kalendāra konstruktors",
+    "Конструктор адвент-календаря",
+    "Advent calendar builder",
+  ],
+  "/how-it-works": ["Kā tas darbojas", "Как это работает", "How it works"],
+  "/guides": ["Ceļveži", "Статьи", "Guides"],
   "/christmas": ["Ziemassvētki 2026", "Рождество 2026", "Christmas 2026"],
   "/christmas-builder": [
     "Svētku dāvanu komplekts",

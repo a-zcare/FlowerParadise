@@ -8,6 +8,8 @@ export interface ProductOptions {
   extraGift: boolean;
   method: "pickup" | "delivery";
   date?: string;
+  time?: string;
+  locationId?: string;
 }
 export interface CartItem {
   id: string;
@@ -18,7 +20,7 @@ export interface CartItem {
 }
 export interface Reservation {
   quantity?: number;
-  wrapping?:string;
+  wrapping?: string;
   id: string;
   product: string;
   date: string;
@@ -41,6 +43,7 @@ export interface Reminder {
   dismissed?: boolean;
 }
 export interface Order {
+  locationId?: string;
   id: string;
   date: string;
   time?: string;

@@ -156,6 +156,20 @@ export function ProductCard({
           )}
         </small>
       )}
+      {p.seasonal && (
+        <div className="gift-indicators">
+          {p.customizable && (
+            <span>
+              {t("Personalizējams", "Персонализация", "Personalizable")}
+            </span>
+          )}
+          {p.seasonal.giftReady && (
+            <span>
+              {t("Gatavs dāvināšanai", "Готов к подарку", "Gift-ready")}
+            </span>
+          )}
+        </div>
+      )}
       <div className="product-meta">
         <span>{pick(categories[p.category], s.lang)}</span>
         <span>€</span>
